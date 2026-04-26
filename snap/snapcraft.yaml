@@ -22,7 +22,6 @@ architectures:
 package-repositories:
   - type: apt
     key-id: B97B0AFCAA1A47F044F244A07FCC7D46ACCC4CF8
-    key-url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
     url: https://apt.postgresql.org/pub/repos/apt
     suites: [jammy-pgdg]
     components: [main]
