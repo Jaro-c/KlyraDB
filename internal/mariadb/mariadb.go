@@ -49,6 +49,9 @@ func (e *MariaDBEngine) Versions() []engine.Version {
 func (e *MariaDBEngine) Create(inst *engine.Instance) error {
 	bin := findMariaDBd()
 	if bin == "" {
+		if engine.SnapDir() != "" {
+			return fmt.Errorf("mariadbd not found — MariaDB is not bundled in this snap")
+		}
 		return fmt.Errorf("mariadbd not found — install: sudo apt install mariadb-server")
 	}
 	for _, dir := range []string{inst.DataDir, filepath.Dir(inst.LogFile), filepath.Dir(inst.PIDFile), filepath.Dir(inst.ConfFile)} {
@@ -158,14 +161,20 @@ func findMariaDBd() string {
 }
 
 func findBinary(name string) string {
-	paths := []string{
+	if snap := engine.SnapDir(); snap != "" {
+		for _, dir := range []string{"usr/sbin", "usr/bin"} {
+			if p := filepath.Join(snap, dir, name); fileExists(p) {
+				return p
+			}
+		}
+	}
+	for _, p := range []string{
 		"/usr/sbin/" + name,
 		"/usr/bin/" + name,
 		"/usr/local/sbin/" + name,
 		"/usr/local/bin/" + name,
-	}
-	for _, p := range paths {
-		if _, err := os.Stat(p); err == nil {
+	} {
+		if fileExists(p) {
 			return p
 		}
 	}
@@ -173,6 +182,11 @@ func findBinary(name string) string {
 		return p
 	}
 	return ""
+}
+
+func fileExists(p string) bool {
+	_, err := os.Stat(p)
+	return err == nil
 }
 
 func detectMariaDBVersion(bin string) string {

@@ -3,6 +3,8 @@ package store
 import (
 	"os"
 	"path/filepath"
+
+	"klyradb/internal/engine"
 )
 
 type Store struct {
@@ -10,11 +12,7 @@ type Store struct {
 }
 
 func New() (*Store, error) {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return nil, err
-	}
-	dir := filepath.Join(home, ".local", "share", "klyradb")
+	dir := engine.BaseDir()
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return nil, err
 	}

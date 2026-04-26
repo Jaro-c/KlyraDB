@@ -22,16 +22,14 @@ That's it. No dependencies, no setup.
 - Copy the connection URI with one click
 - Works with whatever database clients you already have
 
-**Supported engines and versions:**
+**Bundled engines — no extra installation required:**
 
-| Engine     | Versions          |
-|------------|-------------------|
-| PostgreSQL | 14, 15, 16, 17    |
-| MySQL      | 8.0, 8.4          |
-| MariaDB    | 10.6, 10.11, 11.4 |
-| Redis      | 7.2, 7.4          |
-
-> The database binaries (postgres, mysqld, redis-server) must be installed on your system. KlyraDB manages them — it does not bundle them.
+| Engine     | Versions bundled  | Also detects from host |
+|------------|-------------------|------------------------|
+| PostgreSQL | 14, 15, 16, 17    |                        |
+| MySQL      | 8.0               | 8.4                    |
+| MariaDB    | —                 | 10.6, 10.11, 11.4      |
+| Redis      | 6.x               | 7.2, 7.4               |
 
 ---
 

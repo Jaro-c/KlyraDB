@@ -4,10 +4,34 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
 )
+
+// SnapDir returns the $SNAP directory when running inside a snap, empty otherwise.
+func SnapDir() string { return os.Getenv("SNAP") }
+
+// SnapPath prepends $SNAP to the given path when running inside a snap.
+// Example: SnapPath("usr/bin/redis-server") → "/snap/klyradb/current/usr/bin/redis-server"
+func SnapPath(rel string) string {
+	if s := SnapDir(); s != "" {
+		return filepath.Join(s, rel)
+	}
+	return ""
+}
+
+// BaseDir returns the data base directory.
+// Inside snap: $SNAP_USER_COMMON (~/.snap/klyradb/common) — survives updates, removed with snap remove --purge.
+// Outside snap: ~/.local/share/klyradb
+func BaseDir() string {
+	if d := os.Getenv("SNAP_USER_COMMON"); d != "" {
+		return d
+	}
+	home, _ := os.UserHomeDir()
+	return filepath.Join(home, ".local", "share", "klyradb")
+}
 
 type DBType string
 

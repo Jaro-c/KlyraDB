@@ -1,20 +1,17 @@
 name: klyradb
 base: core22
-version: '0.2.0'
+version: '0.3.0'
 summary: Local database manager — PostgreSQL, MySQL, MariaDB, Redis
 description: |
-  KlyraDB is a native desktop app to create, start, stop and manage
-  isolated PostgreSQL, MySQL, MariaDB and Redis instances on your machine.
-  Each instance runs on its own port with its own data directory.
+  KlyraDB manages isolated PostgreSQL, MySQL, MariaDB and Redis instances.
+  No Docker. No config files. Just click and run.
 
-  Supported versions:
+  Bundled engines (no host installation required):
     PostgreSQL: 14, 15, 16, 17
-    MySQL: 8.0, 8.4
-    MariaDB: 10.6, 10.11, 11.4
-    Redis: 7.2, 7.4
+    MySQL: 8.0
+    Redis: 6.x
 
-  Robust PID tracking prevents ghost instances (the DBngin problem).
-  UI is in English. Instances are fully isolated per port and data dir.
+  MariaDB and newer Redis versions are detected if present on the host.
 
 grade: devel
 confinement: classic
@@ -22,22 +19,22 @@ compression: lzo
 
 architectures:
   - build-on: amd64
-  - build-on: arm64
+
+package-repositories:
+  - type: apt
+    key-id: B97B0AFCAA1A47F044F244A07FCC7D46ACCC4CF8
+    key-url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
+    url: https://apt.postgresql.org/pub/repos/apt
+    suites: [jammy-pgdg]
+    components: [main]
 
 apps:
   klyradb:
     command: bin/klyradb
     desktop: share/applications/klyradb.desktop
     environment:
-      LD_LIBRARY_PATH: "$SNAP/usr/lib/$SNAP_ARCH-linux-gnu:$LD_LIBRARY_PATH"
-      PATH: >-
-        /usr/lib/postgresql/17/bin:
-        /usr/lib/postgresql/16/bin:
-        /usr/lib/postgresql/15/bin:
-        /usr/lib/postgresql/14/bin:
-        /usr/sbin:
-        /usr/bin:
-        $PATH
+      LD_LIBRARY_PATH: "$SNAP/usr/lib/$SNAP_ARCH-linux-gnu:$SNAP/usr/lib:$LD_LIBRARY_PATH"
+      PATH: "$SNAP/usr/lib/postgresql/17/bin:$SNAP/usr/lib/postgresql/16/bin:$SNAP/usr/lib/postgresql/15/bin:$SNAP/usr/lib/postgresql/14/bin:$SNAP/usr/sbin:$SNAP/usr/bin:$PATH"
 
 parts:
   klyradb:
@@ -63,3 +60,12 @@ parts:
     stage-packages:
       - libwebkit2gtk-4.1-0
       - libgtk-3-0
+      - postgresql-14
+      - postgresql-15
+      - postgresql-16
+      - postgresql-17
+      - postgresql-common
+      - postgresql-client-common
+      - mysql-server-8.0
+      - redis-server
+      - redis-tools

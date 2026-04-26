@@ -22,10 +22,9 @@ func New() *PGEngine { return &PGEngine{} }
 func (e *PGEngine) DBType() engine.DBType { return engine.TypePostgres }
 
 func (e *PGEngine) Versions() []engine.Version {
-	candidates := []string{
-		"/usr/lib/postgresql",
-		"/snap/postgresql/current",
-		"/opt/postgresql",
+	candidates := []string{"/usr/lib/postgresql", "/opt/postgresql"}
+	if snap := engine.SnapDir(); snap != "" {
+		candidates = append([]string{filepath.Join(snap, "usr/lib/postgresql")}, candidates...)
 	}
 	found := map[string]string{}
 	for _, base := range candidates {
@@ -146,6 +145,9 @@ func (e *PGEngine) binFor(version string) (string, error) {
 		if v.Major == version && v.Installed {
 			return v.BinPath, nil
 		}
+	}
+	if engine.SnapDir() != "" {
+		return "", fmt.Errorf("PostgreSQL %s not found in snap bundle", version)
 	}
 	return "", fmt.Errorf("PostgreSQL %s not installed — run: sudo apt install postgresql-%s", version, version)
 }

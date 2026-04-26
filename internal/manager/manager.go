@@ -43,9 +43,7 @@ type Manager struct {
 }
 
 func New(s *store.Store) *Manager {
-	home, _ := os.UserHomeDir()
-	baseDir := filepath.Join(home, ".local", "share", "klyradb")
-	// Ensure all subdirectory parents exist
+	baseDir := engine.BaseDir()
 	for _, sub := range []string{"data", "logs", "pids", "conf"} {
 		_ = os.MkdirAll(filepath.Join(baseDir, sub), 0o755)
 	}

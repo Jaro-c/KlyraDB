@@ -11,9 +11,9 @@ import (
 	"klyradb/internal/engine"
 )
 
-// supportedMajors — Redis versions with active support as of 2026-04.
-// 7.4 latest stable. 7.2 LTS.
-var supportedMajors = []string{"7.4", "7.2"}
+// supportedMajors — Redis versions detected/bundled.
+// 6.x is bundled in snap (Ubuntu 22.04 package). 7.x detected from host.
+var supportedMajors = []string{"7.4", "7.2", "6.0"}
 
 type RedisEngine struct{}
 
@@ -45,6 +45,9 @@ func (e *RedisEngine) Versions() []engine.Version {
 
 func (e *RedisEngine) Create(inst *engine.Instance) error {
 	if findBinary("redis-server") == "" {
+		if engine.SnapDir() != "" {
+			return fmt.Errorf("redis-server not found in snap bundle")
+		}
 		return fmt.Errorf("redis-server not found — install: sudo apt install redis-server")
 	}
 	for _, dir := range []string{inst.DataDir, filepath.Dir(inst.LogFile), filepath.Dir(inst.PIDFile), filepath.Dir(inst.ConfFile)} {
@@ -108,13 +111,18 @@ func (e *RedisEngine) CheckStatus(inst *engine.Instance) engine.Status {
 // ---- helpers ----
 
 func findBinary(name string) string {
-	paths := []string{
+	if snap := engine.SnapDir(); snap != "" {
+		for _, dir := range []string{"usr/bin", "usr/local/bin"} {
+			if p := filepath.Join(snap, dir, name); fileExists(p) {
+				return p
+			}
+		}
+	}
+	for _, p := range []string{
 		"/usr/bin/" + name,
 		"/usr/local/bin/" + name,
-		"/snap/redis/current/usr/bin/" + name,
-	}
-	for _, p := range paths {
-		if _, err := os.Stat(p); err == nil {
+	} {
+		if fileExists(p) {
 			return p
 		}
 	}
@@ -122,6 +130,11 @@ func findBinary(name string) string {
 		return p
 	}
 	return ""
+}
+
+func fileExists(p string) bool {
+	_, err := os.Stat(p)
+	return err == nil
 }
 
 func detectRedisVersion(bin string) string {

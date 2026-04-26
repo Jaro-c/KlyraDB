@@ -50,6 +50,9 @@ func (e *MySQLEngine) Versions() []engine.Version {
 func (e *MySQLEngine) Create(inst *engine.Instance) error {
 	mysqld := findBinary("mysqld")
 	if mysqld == "" {
+		if engine.SnapDir() != "" {
+			return fmt.Errorf("mysqld not found in snap bundle")
+		}
 		return fmt.Errorf("mysqld not found — install: sudo apt install mysql-server")
 	}
 	for _, dir := range []string{inst.DataDir, filepath.Dir(inst.LogFile), filepath.Dir(inst.PIDFile), filepath.Dir(inst.ConfFile)} {
@@ -128,14 +131,20 @@ func (e *MySQLEngine) CheckStatus(inst *engine.Instance) engine.Status {
 // ---- helpers ----
 
 func findBinary(name string) string {
-	paths := []string{
+	if snap := engine.SnapDir(); snap != "" {
+		for _, dir := range []string{"usr/sbin", "usr/bin"} {
+			if p := filepath.Join(snap, dir, name); fileExists(p) {
+				return p
+			}
+		}
+	}
+	for _, p := range []string{
 		"/usr/sbin/" + name,
 		"/usr/bin/" + name,
 		"/usr/local/sbin/" + name,
 		"/usr/local/bin/" + name,
-	}
-	for _, p := range paths {
-		if _, err := os.Stat(p); err == nil {
+	} {
+		if fileExists(p) {
 			return p
 		}
 	}
@@ -143,6 +152,11 @@ func findBinary(name string) string {
 		return p
 	}
 	return ""
+}
+
+func fileExists(p string) bool {
+	_, err := os.Stat(p)
+	return err == nil
 }
 
 func detectMySQLVersion(mysqldPath string) string {
@@ -171,6 +185,11 @@ log-error = %s
 user = %s
 bind-address = 127.0.0.1
 `, inst.DataDir, sockFile, inst.Port, inst.PIDFile, inst.LogFile, inst.User)
+	if snap := engine.SnapDir(); snap != "" {
+		content += "basedir = " + filepath.Join(snap, "usr") + "\n"
+		content += "plugin-dir = " + filepath.Join(snap, "usr/lib/mysql/plugin") + "\n"
+		content += "lc-messages-dir = " + filepath.Join(snap, "usr/share/mysql") + "\n"
+	}
 	return os.WriteFile(inst.ConfFile, []byte(content), 0o644)
 }
 
