@@ -76,6 +76,12 @@ func (a *App) SuggestPort(dbType string) int {
 	return a.manager.NextFreePort(engine.DBType(dbType))
 }
 
+// SetLocale changes the active language at runtime and returns new strings.
+func (a *App) SetLocale(code string) map[string]string {
+	a.lang = i18n.For(code)
+	return a.lang.All()
+}
+
 // ---- i18n bindings ----
 
 func (a *App) Strings() map[string]string {

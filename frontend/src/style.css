@@ -1,5 +1,8 @@
 /* KlyraDB — pure CSS, no frameworks */
-:root {
+
+/* ---------- Theme variables ---------- */
+/* Default = dark (set via data-theme on <html> before paint) */
+:root, html[data-theme="dark"] {
   --bg:            #0b0d12;
   --bg-elev:       #11141b;
   --bg-elev-2:     #171b24;
@@ -23,6 +26,26 @@
   --c-mysql:    #e48236;
   --c-mariadb:  #c87e3f;
   --c-redis:    #dc382d;
+
+  --pulse-glow: rgba(124,245,164,.6);
+}
+
+html[data-theme="light"] {
+  --bg:            #f2f5fc;
+  --bg-elev:       #ffffff;
+  --bg-elev-2:     #e8edf8;
+  --border:        #dce3f0;
+  --border-strong: #c2cce0;
+  --text:          #111827;
+  --text-dim:      #4b5574;
+  --text-mute:     #8e97b0;
+  --accent:        #16a34a;
+  --accent-2:      #0284c7;
+  --accent-grad:   linear-gradient(135deg, #16a34a 0%, #0284c7 100%);
+  --danger:        #dc2626;
+  --warning:       #b45309;
+  --shadow:        0 10px 30px rgba(0,0,0,.10);
+  --pulse-glow:    rgba(22,163,74,.5);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -52,6 +75,9 @@ html, body {
   display: flex;
   flex-direction: column;
   padding: 20px 14px;
+}
+html[data-theme="light"] .sidebar {
+  background: linear-gradient(180deg, #eaf0fc 0%, #e2eaf7 100%);
 }
 
 .brand {
@@ -109,9 +135,9 @@ html, body {
   animation: pulse 2s infinite;
 }
 @keyframes pulse {
-  0%   { box-shadow: 0 0 0 0   rgba(124, 245, 164, 0.6); }
-  70%  { box-shadow: 0 0 0 8px rgba(124, 245, 164, 0); }
-  100% { box-shadow: 0 0 0 0   rgba(124, 245, 164, 0); }
+  0%   { box-shadow: 0 0 0 0   var(--pulse-glow); }
+  70%  { box-shadow: 0 0 0 8px transparent; }
+  100% { box-shadow: 0 0 0 0   transparent; }
 }
 
 /* ---------- Main ---------- */
@@ -121,6 +147,9 @@ html, body {
     radial-gradient(1200px 600px at 20% -10%, rgba(93,219,255,0.06), transparent 60%),
     radial-gradient(800px 500px at 100% 0%, rgba(124,245,164,0.05), transparent 60%),
     var(--bg);
+}
+html[data-theme="light"] .main {
+  background: var(--bg);
 }
 .topbar {
   display: flex; justify-content: space-between; align-items: end;
@@ -401,6 +430,43 @@ html, body {
 .logs-box {
   background: var(--bg-elev); border: 1px solid var(--border);
   border-radius: var(--radius); padding: 20px; min-height: 200px;
+}
+
+/* ---------- Settings view ---------- */
+.settings-layout {
+  display: flex; flex-direction: column; gap: 2px; max-width: 560px;
+}
+.settings-row {
+  display: flex; justify-content: space-between; align-items: center;
+  background: var(--bg-elev); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 18px 20px; gap: 20px;
+}
+.settings-row-info {
+  display: flex; flex-direction: column; gap: 3px;
+}
+.settings-label {
+  font-size: 14px; font-weight: 500; color: var(--text);
+}
+.settings-desc {
+  font-size: 12px; color: var(--text-dim);
+}
+.settings-select {
+  background: var(--bg); border: 1px solid var(--border-strong);
+  color: var(--text); padding: 7px 10px; border-radius: var(--radius-sm);
+  font-size: 13px; font-family: inherit; outline: none; min-width: 170px;
+  cursor: pointer;
+}
+.settings-select:focus { border-color: var(--accent); }
+.theme-picker { display: flex; gap: 4px; }
+.theme-btn {
+  background: var(--bg); border: 1px solid var(--border-strong);
+  color: var(--text-dim); padding: 7px 14px; border-radius: var(--radius-sm);
+  font-size: 12px; cursor: pointer; transition: all 0.15s;
+}
+.theme-btn:hover { color: var(--text); border-color: var(--text-mute); }
+.theme-btn.active {
+  color: var(--text); border-color: transparent;
+  outline: 2px solid var(--accent); background: var(--bg-elev-2);
 }
 
 /* Scrollbar */

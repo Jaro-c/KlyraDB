@@ -101,6 +101,21 @@ func (l *Lang) All() map[string]string {
 	return out
 }
 
+// For returns a Lang for the given code, with English fallback.
+func For(code string) *Lang {
+	code = strings.ToLower(strings.TrimSpace(code))
+	if m, ok := catalogs[code]; ok {
+		return build(code, m)
+	}
+	if i := strings.Index(code, "-"); i > 0 {
+		base := code[:i]
+		if m, ok := catalogs[base]; ok {
+			return build(base, m)
+		}
+	}
+	return build(fallback, catalogs[fallback])
+}
+
 // Available returns the list of registered locale codes.
 func Available() []string {
 	out := make([]string, 0, len(catalogs))

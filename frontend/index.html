@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>KlyraDB</title>
     <link rel="stylesheet" href="src/style.css" />
+    <script>
+      (function(){
+        var t=localStorage.getItem('klyraTheme')||'dark';
+        var a=t==='system'?(window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'):t;
+        document.documentElement.dataset.theme=a;
+      })();
+    </script>
   </head>
   <body>
     <div id="app">
@@ -34,6 +41,10 @@
           </button>
           <button class="nav-item" data-view="logs">
             <span class="dot"></span> <span data-i18n="nav.logs"></span>
+          </button>
+          <div class="nav-label" data-i18n="nav.preferences" style="margin-top:12px"></div>
+          <button class="nav-item" data-view="settings">
+            <span class="dot"></span> <span data-i18n="nav.settings"></span>
           </button>
         </nav>
 
@@ -88,6 +99,29 @@
         <section id="view-logs" class="view hidden">
           <div class="logs-box">
             <p class="muted" data-i18n="sub.logs"></p>
+          </div>
+        </section>
+
+        <section id="view-settings" class="view hidden">
+          <div class="settings-layout">
+            <div class="settings-row">
+              <div class="settings-row-info">
+                <span class="settings-label" data-i18n="settings.language"></span>
+                <span class="settings-desc" data-i18n="settings.language_desc"></span>
+              </div>
+              <select id="setting-locale" class="settings-select"></select>
+            </div>
+            <div class="settings-row">
+              <div class="settings-row-info">
+                <span class="settings-label" data-i18n="settings.theme"></span>
+                <span class="settings-desc" data-i18n="settings.theme_desc"></span>
+              </div>
+              <div class="theme-picker">
+                <button class="theme-btn" data-theme="dark"   data-i18n="settings.theme_dark"></button>
+                <button class="theme-btn" data-theme="light"  data-i18n="settings.theme_light"></button>
+                <button class="theme-btn" data-theme="system" data-i18n="settings.theme_system"></button>
+              </div>
+            </div>
           </div>
         </section>
       </main>

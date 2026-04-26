@@ -1,6 +1,17 @@
 // KlyraDB frontend — vanilla JS. Wails exposes go.main.App.*
 const api = () => window.go && window.go.main && window.go.main.App;
 
+const LOCALE_NAMES = {
+  ar:"العربية", ca:"Català", cs:"Čeština", da:"Dansk",
+  de:"Deutsch", el:"Ελληνικά", en:"English", es:"Español",
+  fi:"Suomi", fr:"Français", he:"עברית", hi:"हिन्दी",
+  hu:"Magyar", id:"Bahasa Indonesia", it:"Italiano",
+  ja:"日本語", ko:"한국어", nb:"Norsk bokmål", nl:"Nederlands",
+  pl:"Polski", "pt-br":"Português (Brasil)", pt:"Português",
+  ro:"Română", ru:"Русский", sv:"Svenska", tr:"Türkçe",
+  uk:"Українська", vi:"Tiếng Việt", "zh-cn":"中文(简体)", "zh-tw":"中文(繁體)",
+};
+
 const DB_LABELS = {
   postgres: "PostgreSQL",
   mysql: "MySQL",
@@ -18,6 +29,7 @@ const DB_CONN_URI = {
 const state = {
   instances: [],
   versions: [],
+  locales: [],
   view: "instances",
   strings: {},
   locale: "en",
@@ -49,6 +61,7 @@ function updateTitles() {
     instances: ["title.instances", "sub.instances"],
     versions:  ["title.versions",  "sub.versions"],
     logs:      ["title.logs",      "sub.logs"],
+    settings:  ["title.settings",  "sub.settings"],
   };
   const [titleKey, subKey] = titles[state.view];
   document.getElementById("view-title").textContent = t(titleKey);
@@ -67,8 +80,10 @@ function switchView(name) {
   );
   document.querySelectorAll(".view").forEach((v) => v.classList.add("hidden"));
   document.getElementById(`view-${name}`).classList.remove("hidden");
+  document.getElementById("btn-new").classList.toggle("hidden", name === "settings");
   updateTitles();
   if (name === "versions") renderVersions();
+  if (name === "settings") renderSettings();
 }
 
 // ---------- filter bar ----------
@@ -84,10 +99,68 @@ document.querySelectorAll(".filter-btn").forEach((btn) => {
 
 // ---------- data ----------
 async function loadStrings() {
-  state.strings = (await api().Strings()) || {};
-  state.locale  = (await api().Locale())  || "en";
+  const saved = localStorage.getItem("klyraLocale");
+  if (saved) {
+    state.strings = (await api().SetLocale(saved)) || {};
+    state.locale  = saved;
+  } else {
+    state.strings = (await api().Strings()) || {};
+    state.locale  = (await api().Locale())  || "en";
+  }
   try { state.dir = (await api().Direction()) || "ltr"; } catch { state.dir = "ltr"; }
   applyI18n();
+}
+
+// ---------- theme ----------
+function applyTheme(mode) {
+  const actual = mode === "system"
+    ? (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark")
+    : mode;
+  document.documentElement.dataset.theme = actual;
+}
+
+function setTheme(mode) {
+  localStorage.setItem("klyraTheme", mode);
+  applyTheme(mode);
+  document.querySelectorAll(".theme-btn").forEach((b) =>
+    b.classList.toggle("active", b.dataset.theme === mode)
+  );
+}
+
+window.matchMedia("(prefers-color-scheme: light)").addEventListener("change", () => {
+  if ((localStorage.getItem("klyraTheme") || "dark") === "system") applyTheme("system");
+});
+
+// ---------- settings ----------
+function renderSettings() {
+  const locSel = document.getElementById("setting-locale");
+  locSel.innerHTML = "";
+  const sorted = [...state.locales].sort((a, b) =>
+    (LOCALE_NAMES[a] || a).localeCompare(LOCALE_NAMES[b] || b)
+  );
+  sorted.forEach((code) => {
+    const o = document.createElement("option");
+    o.value = code;
+    o.textContent = LOCALE_NAMES[code] || code;
+    o.selected = code === state.locale;
+    locSel.appendChild(o);
+  });
+
+  const saved = localStorage.getItem("klyraTheme") || "dark";
+  document.querySelectorAll(".theme-btn").forEach((b) =>
+    b.classList.toggle("active", b.dataset.theme === saved)
+  );
+}
+
+async function changeLocale(code) {
+  state.strings = (await api().SetLocale(code)) || {};
+  state.locale  = code;
+  try { state.dir = (await api().Direction()) || "ltr"; } catch { state.dir = "ltr"; }
+  localStorage.setItem("klyraLocale", code);
+  applyI18n();
+  renderInstances();
+  if (state.view === "versions")  renderVersions();
+  if (state.view === "settings")  renderSettings();
 }
 
 async function refresh() {
@@ -95,6 +168,9 @@ async function refresh() {
   try {
     state.instances = (await api().ListInstances()) || [];
     state.versions  = (await api().ListVersions())  || [];
+    if (!state.locales.length) {
+      state.locales = (await api().AvailableLocales()) || [];
+    }
     renderInstances();
   } catch (e) {
     toast(e.message || String(e), true);
@@ -352,6 +428,15 @@ function toast(msg, isErr = false) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => el.classList.add("hidden"), 2500);
 }
+
+// ---------- settings events ----------
+document.getElementById("setting-locale").addEventListener("change", (e) => {
+  changeLocale(e.target.value);
+});
+
+document.querySelectorAll(".theme-btn").forEach((b) => {
+  b.addEventListener("click", () => setTheme(b.dataset.theme));
+});
 
 // ---------- boot ----------
 window.addEventListener("DOMContentLoaded", () => {
