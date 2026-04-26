@@ -1,0 +1,9 @@
+build/bin/
+frontend/dist/
+frontend/node_modules/
+*.snap
+.wails/
+parts/
+prime/
+stage/
+*.log

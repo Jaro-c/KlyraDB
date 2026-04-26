@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>KlyraDB</title>
+    <link rel="stylesheet" href="src/style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="logo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <ellipse cx="12" cy="5" rx="9" ry="3"/>
+              <path d="M3 5v5c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/>
+              <path d="M3 10v5c0 1.66 4.03 3 9 3s9-1.34 9-3v-5"/>
+              <path d="M3 15v4c0 1.66 4.03 3 9 3s9-1.34 9-3v-4"/>
+            </svg>
+          </div>
+          <div class="brand-text">
+            <h1>KlyraDB</h1>
+            <span data-i18n="app.tagline"></span>
+          </div>
+        </div>
+
+        <nav class="nav">
+          <div class="nav-label" data-i18n="nav.library"></div>
+          <button class="nav-item active" data-view="instances">
+            <span class="dot"></span> <span data-i18n="nav.instances"></span>
+          </button>
+          <button class="nav-item" data-view="versions">
+            <span class="dot"></span> <span data-i18n="nav.versions"></span>
+          </button>
+          <button class="nav-item" data-view="logs">
+            <span class="dot"></span> <span data-i18n="nav.logs"></span>
+          </button>
+        </nav>
+
+        <div class="sidebar-footer">
+          <div class="status-pill">
+            <span class="pulse"></span>
+            <span id="footer-status" data-i18n="footer.ready"></span>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div>
+            <h2 id="view-title"></h2>
+            <p id="view-sub" class="muted"></p>
+          </div>
+          <button class="btn-primary" id="btn-new">
+            <span class="plus">+</span> <span data-i18n="btn.new"></span>
+          </button>
+        </header>
+
+        <section id="view-instances" class="view">
+          <div id="filter-bar" class="filter-bar">
+            <button class="filter-btn active" data-filter="all">All</button>
+            <button class="filter-btn" data-filter="postgres">
+              <span class="db-dot postgres"></span> PostgreSQL
+            </button>
+            <button class="filter-btn" data-filter="mysql">
+              <span class="db-dot mysql"></span> MySQL
+            </button>
+            <button class="filter-btn" data-filter="mariadb">
+              <span class="db-dot mariadb"></span> MariaDB
+            </button>
+            <button class="filter-btn" data-filter="redis">
+              <span class="db-dot redis"></span> Redis
+            </button>
+          </div>
+          <div id="empty" class="empty hidden">
+            <div class="empty-art"></div>
+            <h3 data-i18n="empty.title"></h3>
+            <p data-i18n="empty.desc"></p>
+            <button class="btn-primary" id="btn-empty-new" data-i18n="empty.btn"></button>
+          </div>
+          <div id="cards" class="cards"></div>
+        </section>
+
+        <section id="view-versions" class="view hidden">
+          <div id="versions" class="versions-grid"></div>
+        </section>
+
+        <section id="view-logs" class="view hidden">
+          <div class="logs-box">
+            <p class="muted" data-i18n="sub.logs"></p>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- New Instance Modal -->
+    <div id="modal" class="modal hidden">
+      <div class="modal-card">
+        <h3 data-i18n="modal.title"></h3>
+        <label>
+          <span data-i18n="modal.type"></span>
+          <div class="db-type-picker" id="f-type-picker">
+            <button class="db-type-btn active" data-type="postgres">
+              <span class="db-dot postgres"></span>
+              <span>PostgreSQL</span>
+            </button>
+            <button class="db-type-btn" data-type="mysql">
+              <span class="db-dot mysql"></span>
+              <span>MySQL</span>
+            </button>
+            <button class="db-type-btn" data-type="mariadb">
+              <span class="db-dot mariadb"></span>
+              <span>MariaDB</span>
+            </button>
+            <button class="db-type-btn" data-type="redis">
+              <span class="db-dot redis"></span>
+              <span>Redis</span>
+            </button>
+          </div>
+        </label>
+        <label>
+          <span data-i18n="modal.name"></span>
+          <input id="f-name" type="text" autocomplete="off"/>
+        </label>
+        <label>
+          <span data-i18n="modal.version"></span>
+          <select id="f-version"></select>
+        </label>
+        <label>
+          <span data-i18n="modal.port"></span>
+          <input id="f-port" type="number" min="1024" max="65535"/>
+        </label>
+        <div id="modal-error" class="error hidden"></div>
+        <div class="modal-actions">
+          <button class="btn-ghost" id="m-cancel" data-i18n="btn.cancel"></button>
+          <button class="btn-primary" id="m-create" data-i18n="btn.create"></button>
+        </div>
+      </div>
+    </div>
+
+    <div id="toast" class="toast hidden"></div>
+
+    <script type="module" src="src/main.js"></script>
+  </body>
+</html>

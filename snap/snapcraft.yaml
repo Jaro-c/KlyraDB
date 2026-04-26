@@ -1,0 +1,65 @@
+name: klyradb
+base: core22
+version: '0.2.0'
+summary: Local database manager — PostgreSQL, MySQL, MariaDB, Redis
+description: |
+  KlyraDB is a native desktop app to create, start, stop and manage
+  isolated PostgreSQL, MySQL, MariaDB and Redis instances on your machine.
+  Each instance runs on its own port with its own data directory.
+
+  Supported versions:
+    PostgreSQL: 14, 15, 16, 17
+    MySQL: 8.0, 8.4
+    MariaDB: 10.6, 10.11, 11.4
+    Redis: 7.2, 7.4
+
+  Robust PID tracking prevents ghost instances (the DBngin problem).
+  UI is in English. Instances are fully isolated per port and data dir.
+
+grade: devel
+confinement: classic
+compression: lzo
+
+architectures:
+  - build-on: amd64
+  - build-on: arm64
+
+apps:
+  klyradb:
+    command: bin/klyradb
+    desktop: share/applications/klyradb.desktop
+    environment:
+      LD_LIBRARY_PATH: "$SNAP/usr/lib/$SNAP_ARCH-linux-gnu:$LD_LIBRARY_PATH"
+      PATH: >-
+        /usr/lib/postgresql/17/bin:
+        /usr/lib/postgresql/16/bin:
+        /usr/lib/postgresql/15/bin:
+        /usr/lib/postgresql/14/bin:
+        /usr/sbin:
+        /usr/bin:
+        $PATH
+
+parts:
+  klyradb:
+    plugin: nil
+    source: .
+    build-packages:
+      - golang-go
+      - gcc
+      - libgtk-3-dev
+      - libwebkit2gtk-4.1-dev
+      - pkg-config
+      - npm
+    override-build: |
+      export GOFLAGS="-mod=mod"
+      go install github.com/wailsapp/wails/v2/cmd/wails@latest
+      $HOME/go/bin/wails build -platform linux/amd64 -tags webkit2_41
+      install -D build/bin/klyradb $CRAFT_PART_INSTALL/bin/klyradb
+      install -D build/appicon.png $CRAFT_PART_INSTALL/share/icons/hicolor/512x512/apps/klyradb.png
+      install -D snap/local/klyradb.desktop $CRAFT_PART_INSTALL/share/applications/klyradb.desktop
+
+  deps:
+    plugin: nil
+    stage-packages:
+      - libwebkit2gtk-4.1-0
+      - libgtk-3-0

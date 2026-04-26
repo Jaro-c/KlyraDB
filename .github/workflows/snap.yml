@@ -1,0 +1,33 @@
+name: Snap
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  snap:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build snap
+        uses: snapcore/action-build@v1
+        id: build
+
+      - name: Upload snap to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.build.outputs.snap }}
+          name: KlyraDB ${{ github.ref_name }}
+
+      # Publish to Snap Store automatically on release tag
+      # Requires SNAPCRAFT_STORE_CREDENTIALS secret in repo Settings → Secrets
+      - name: Publish to Snap Store
+        uses: snapcore/action-publish@v1
+        env:
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
+        with:
+          snap: ${{ steps.build.outputs.snap }}
+          release: stable
