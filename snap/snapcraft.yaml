@@ -1,6 +1,6 @@
 name: klyradb
 base: core22
-version: '0.4.6'
+version: '0.4.7'
 summary: Local database manager — PostgreSQL, MySQL, MariaDB, Redis
 description: |
   KlyraDB manages isolated PostgreSQL, MySQL, MariaDB and Redis instances.
@@ -85,9 +85,9 @@ parts:
       for f in mysql mysqladmin mysqlcheck mysqldump mysql_upgrade mysql_ssl_rsa_setup; do
         [ -f "$SRC/usr/bin/$f" ] && mv "$SRC/usr/bin/$f" "$PREFIX/bin/"
       done
-      [ -d "$SRC/usr/lib/mysql" ]     && mv "$SRC/usr/lib/mysql"     "$PREFIX/lib/mysql"
-      [ -d "$SRC/usr/share/mysql" ]   && mv "$SRC/usr/share/mysql"   "$PREFIX/share/mysql"
-      [ -d "$SRC/usr/share/mysql-8.0" ] && mv "$SRC/usr/share/mysql-8.0" "$PREFIX/share/mysql-8.0"
+      [ -d "$SRC/usr/lib/mysql" ]       && mv "$SRC/usr/lib/mysql"       "$PREFIX/lib/mysql"     || true
+      [ -d "$SRC/usr/share/mysql" ]     && mv "$SRC/usr/share/mysql"     "$PREFIX/share/mysql"   || true
+      [ -d "$SRC/usr/share/mysql-8.0" ] && mv "$SRC/usr/share/mysql-8.0" "$PREFIX/share/mysql-8.0" || true
     stage:
       - opt/klyra-mysql
       - usr/lib/x86_64-linux-gnu/libmysqlclient*
@@ -113,9 +113,9 @@ parts:
                mariadb-install-db mysql_install_db; do
         [ -f "$SRC/usr/bin/$f" ] && mv "$SRC/usr/bin/$f" "$PREFIX/bin/"
       done
-      [ -d "$SRC/usr/lib/mysql" ]          && mv "$SRC/usr/lib/mysql"          "$PREFIX/lib/mysql"
-      [ -d "$SRC/usr/share/mysql" ]        && mv "$SRC/usr/share/mysql"        "$PREFIX/share/mysql"
-      [ -d "$SRC/usr/share/mysql-common" ] && mv "$SRC/usr/share/mysql-common" "$PREFIX/share/mysql-common"
+      [ -d "$SRC/usr/lib/mysql" ]          && mv "$SRC/usr/lib/mysql"          "$PREFIX/lib/mysql"          || true
+      [ -d "$SRC/usr/share/mysql" ]        && mv "$SRC/usr/share/mysql"        "$PREFIX/share/mysql"        || true
+      [ -d "$SRC/usr/share/mysql-common" ] && mv "$SRC/usr/share/mysql-common" "$PREFIX/share/mysql-common" || true
     stage:
       - opt/klyra-mariadb
       - usr/lib/x86_64-linux-gnu/libmariadb*
