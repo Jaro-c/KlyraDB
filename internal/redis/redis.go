@@ -112,13 +112,18 @@ func (e *RedisEngine) CheckStatus(inst *engine.Instance) engine.Status {
 
 func findBinary(name string) string {
 	if snap := engine.SnapDir(); snap != "" {
+		// Snap context: only bundled binaries, never fall back to host system
 		for _, dir := range []string{"usr/bin", "usr/local/bin"} {
 			if p := filepath.Join(snap, dir, name); fileExists(p) {
 				return p
 			}
 		}
+		return ""
 	}
+	// Native: KlyraDB engines dir takes priority over system paths
+	engDir := engine.EnginesDir()
 	for _, p := range []string{
+		filepath.Join(engDir, "redis", "bin", name),
 		"/usr/bin/" + name,
 		"/usr/local/bin/" + name,
 	} {

@@ -65,15 +65,29 @@ func (e *MySQLEngine) Create(inst *engine.Instance) error {
 	if err := os.Chmod(inst.DataDir, 0o700); err != nil {
 		return err
 	}
+	// Write conf first so snap basedir/plugin paths are known; then init with
+	// --no-defaults so MySQL never reads /etc/mysql/* (which could redirect
+	// datadir or load conflicting plugins from the host system).
+	if err := writeMyConf(inst); err != nil {
+		return err
+	}
 	cmd := exec.Command(mysqld,
+		"--no-defaults",
 		"--initialize-insecure",
 		"--user="+inst.User,
 		"--datadir="+inst.DataDir,
 	)
+	if snap := engine.SnapDir(); snap != "" {
+		cmd.Args = append(cmd.Args,
+			"--basedir="+filepath.Join(snap, "opt/klyra-mysql"),
+			"--plugin-dir="+filepath.Join(snap, "opt/klyra-mysql/lib/mysql/plugin"),
+			"--lc-messages-dir="+filepath.Join(snap, "opt/klyra-mysql/share/mysql"),
+		)
+	}
 	if out, err := cmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("mysql initialize: %s", out)
 	}
-	return writeMyConf(inst)
+	return nil
 }
 
 func (e *MySQLEngine) Start(inst *engine.Instance) error {
@@ -132,13 +146,19 @@ func (e *MySQLEngine) CheckStatus(inst *engine.Instance) engine.Status {
 
 func findBinary(name string) string {
 	if snap := engine.SnapDir(); snap != "" {
-		for _, dir := range []string{"usr/sbin", "usr/bin"} {
+		// Snap context: only the isolated MySQL prefix, never host system
+		for _, dir := range []string{"opt/klyra-mysql/sbin", "opt/klyra-mysql/bin"} {
 			if p := filepath.Join(snap, dir, name); fileExists(p) {
 				return p
 			}
 		}
+		return ""
 	}
+	// Native: KlyraDB engines dir takes priority over system paths
+	engDir := engine.EnginesDir()
 	for _, p := range []string{
+		filepath.Join(engDir, "mysql", "sbin", name),
+		filepath.Join(engDir, "mysql", "bin", name),
 		"/usr/sbin/" + name,
 		"/usr/bin/" + name,
 		"/usr/local/sbin/" + name,
@@ -186,9 +206,9 @@ user = %s
 bind-address = 127.0.0.1
 `, inst.DataDir, sockFile, inst.Port, inst.PIDFile, inst.LogFile, inst.User)
 	if snap := engine.SnapDir(); snap != "" {
-		content += "basedir = " + filepath.Join(snap, "usr") + "\n"
-		content += "plugin-dir = " + filepath.Join(snap, "usr/lib/mysql/plugin") + "\n"
-		content += "lc-messages-dir = " + filepath.Join(snap, "usr/share/mysql") + "\n"
+		content += "basedir = " + filepath.Join(snap, "opt/klyra-mysql") + "\n"
+		content += "plugin-dir = " + filepath.Join(snap, "opt/klyra-mysql/lib/mysql/plugin") + "\n"
+		content += "lc-messages-dir = " + filepath.Join(snap, "opt/klyra-mysql/share/mysql") + "\n"
 	}
 	return os.WriteFile(inst.ConfFile, []byte(content), 0o644)
 }

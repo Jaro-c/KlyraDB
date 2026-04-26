@@ -33,6 +33,13 @@ func BaseDir() string {
 	return filepath.Join(home, ".local", "share", "klyradb")
 }
 
+// EnginesDir returns the directory where users can drop custom engine binaries.
+// KlyraDB checks this before system paths (only relevant outside snap).
+// Structure: engines/pg/<major>/bin/, engines/mysql/sbin/, engines/redis/bin/, etc.
+func EnginesDir() string {
+	return filepath.Join(BaseDir(), "engines")
+}
+
 type DBType string
 
 const (

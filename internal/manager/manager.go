@@ -45,7 +45,7 @@ type Manager struct {
 
 func New(s *store.Store) *Manager {
 	baseDir := engine.BaseDir()
-	for _, sub := range []string{"data", "logs", "pids", "conf"} {
+	for _, sub := range []string{"data", "logs", "pids", "conf", "engines"} {
 		_ = os.MkdirAll(filepath.Join(baseDir, sub), 0o755)
 	}
 	return &Manager{

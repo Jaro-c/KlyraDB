@@ -65,8 +65,13 @@ func (e *MariaDBEngine) Create(inst *engine.Instance) error {
 		return err
 	}
 
-	// mariadb-install-db prefers --basedir so it can find system tables
-	basedir := filepath.Dir(filepath.Dir(bin)) // /usr/sbin → /usr
+	// basedir: in snap use the isolated prefix; outside snap derive from binary path
+	var basedir string
+	if snap := engine.SnapDir(); snap != "" {
+		basedir = filepath.Join(snap, "opt/klyra-mariadb")
+	} else {
+		basedir = filepath.Dir(filepath.Dir(bin)) // e.g. /usr/sbin → /usr
+	}
 	initBin := findBinary("mariadb-install-db")
 	if initBin == "" {
 		initBin = findBinary("mysql_install_db")
@@ -74,15 +79,25 @@ func (e *MariaDBEngine) Create(inst *engine.Instance) error {
 	if initBin == "" {
 		return fmt.Errorf("mariadb-install-db not found — reinstall mariadb-server")
 	}
+	// Write conf first so the process finds snap-relative paths if needed
+	if err := writeMyConf(inst); err != nil {
+		return err
+	}
 	cmd := exec.Command(initBin,
+		"--no-defaults",
 		"--user="+inst.User,
 		"--datadir="+inst.DataDir,
 		"--basedir="+basedir,
 	)
+	if snap := engine.SnapDir(); snap != "" {
+		cmd.Args = append(cmd.Args,
+			"--lc-messages-dir="+filepath.Join(snap, "opt/klyra-mariadb/share/mysql"),
+		)
+	}
 	if out, err := cmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("mariadb-install-db: %s", out)
 	}
-	return writeMyConf(inst)
+	return nil
 }
 
 func (e *MariaDBEngine) Start(inst *engine.Instance) error {
@@ -162,13 +177,19 @@ func findMariaDBd() string {
 
 func findBinary(name string) string {
 	if snap := engine.SnapDir(); snap != "" {
-		for _, dir := range []string{"usr/sbin", "usr/bin"} {
+		// Snap context: only the isolated MariaDB prefix, never host system
+		for _, dir := range []string{"opt/klyra-mariadb/sbin", "opt/klyra-mariadb/bin"} {
 			if p := filepath.Join(snap, dir, name); fileExists(p) {
 				return p
 			}
 		}
+		return ""
 	}
+	// Native: KlyraDB engines dir takes priority over system paths
+	engDir := engine.EnginesDir()
 	for _, p := range []string{
+		filepath.Join(engDir, "mariadb", "sbin", name),
+		filepath.Join(engDir, "mariadb", "bin", name),
 		"/usr/sbin/" + name,
 		"/usr/bin/" + name,
 		"/usr/local/sbin/" + name,
@@ -222,6 +243,11 @@ log-error = %s
 user = %s
 bind-address = 127.0.0.1
 `, inst.DataDir, sockFile, inst.Port, inst.PIDFile, inst.LogFile, inst.User)
+	if snap := engine.SnapDir(); snap != "" {
+		content += "basedir = " + filepath.Join(snap, "opt/klyra-mariadb") + "\n"
+		content += "plugin-dir = " + filepath.Join(snap, "opt/klyra-mariadb/lib/mysql/plugin") + "\n"
+		content += "lc-messages-dir = " + filepath.Join(snap, "opt/klyra-mariadb/share/mysql") + "\n"
+	}
 	return os.WriteFile(inst.ConfFile, []byte(content), 0o644)
 }
 

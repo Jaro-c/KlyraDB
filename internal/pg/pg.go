@@ -22,9 +22,17 @@ func New() *PGEngine { return &PGEngine{} }
 func (e *PGEngine) DBType() engine.DBType { return engine.TypePostgres }
 
 func (e *PGEngine) Versions() []engine.Version {
-	candidates := []string{"/usr/lib/postgresql", "/opt/postgresql"}
+	var candidates []string
 	if snap := engine.SnapDir(); snap != "" {
-		candidates = append([]string{filepath.Join(snap, "usr/lib/postgresql")}, candidates...)
+		// Snap context: only bundled binaries, no host fallback
+		candidates = []string{filepath.Join(snap, "usr/lib/postgresql")}
+	} else {
+		// Native: KlyraDB engines dir takes priority, then system paths
+		candidates = []string{
+			filepath.Join(engine.EnginesDir(), "pg"),
+			"/usr/lib/postgresql",
+			"/opt/postgresql",
+		}
 	}
 	found := map[string]string{}
 	for _, base := range candidates {
@@ -88,7 +96,7 @@ func (e *PGEngine) Start(inst *engine.Instance) error {
 		filepath.Join(bin, "pg_ctl"),
 		"-D", inst.DataDir,
 		"-l", inst.LogFile,
-		"-o", fmt.Sprintf("-p %d", inst.Port),
+		"-o", fmt.Sprintf("-p %d -k %s", inst.Port, inst.DataDir),
 		"start",
 	)
 	if out, err := cmd.CombinedOutput(); err != nil {
