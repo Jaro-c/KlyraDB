@@ -1,6 +1,6 @@
 name: klyradb
 base: core22
-version: '0.4.5'
+version: '0.4.6'
 summary: Local database manager — PostgreSQL, MySQL, MariaDB, Redis
 description: |
   KlyraDB manages isolated PostgreSQL, MySQL, MariaDB and Redis instances.
@@ -88,6 +88,9 @@ parts:
       [ -d "$SRC/usr/lib/mysql" ]     && mv "$SRC/usr/lib/mysql"     "$PREFIX/lib/mysql"
       [ -d "$SRC/usr/share/mysql" ]   && mv "$SRC/usr/share/mysql"   "$PREFIX/share/mysql"
       [ -d "$SRC/usr/share/mysql-8.0" ] && mv "$SRC/usr/share/mysql-8.0" "$PREFIX/share/mysql-8.0"
+    stage:
+      - opt/klyra-mysql
+      - usr/lib/x86_64-linux-gnu/libmysqlclient*
 
   # MariaDB 10.6 extracted to /opt/klyra-mariadb/ — isolated prefix, same reason.
   # Only opt/klyra-mariadb/* and libmariadb* are staged to avoid duplicating
