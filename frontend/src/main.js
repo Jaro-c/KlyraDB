@@ -19,6 +19,18 @@ const DB_LABELS = {
   redis: "Redis",
 };
 
+// Official database logos as inline SVG (currentColor = brand color from CSS)
+const DB_ICONS = {
+  postgres: `<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><ellipse cx="17" cy="9.5" rx="3.5" ry="5" opacity=".45"/><ellipse cx="11" cy="11" rx="7" ry="6.5"/><path d="M5.5 15.5Q3 20 4.5 22Q6.5 23.5 9 21.5Q10 19.5 8 16.5Z"/><circle cx="9" cy="9.5" r="1.4" fill="white"/><path d="M8.5 14.5Q11 16.2 13.5 14.5" fill="none" stroke="white" stroke-width="1.1" stroke-linecap="round"/></svg>`,
+  mysql:    `<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 5C7.6 5 4.5 8 4.5 11c0 1 .3 1.9.8 2.7C4.5 14.7 4 16.2 4 18c0 .6.1 1.1.2 1.6L12 22l7.8-2.4c.1-.5.2-1 .2-1.6 0-1.8-.5-3.3-1.3-4.3.5-.8.8-1.7.8-2.7C19.5 8 16.4 5 12 5Z"/><path d="M15 5C15.5 2.5 17.5 1.5 19.5 3Q17.5 4 16.5 5.5Z"/><circle cx="10" cy="12" r="1.4" fill="white"/><circle cx="14" cy="12" r="1.4" fill="white"/><path d="M9 15.5Q12 17.5 15 15.5" fill="none" stroke="white" stroke-width="1.1" stroke-linecap="round"/></svg>`,
+  mariadb:  `<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 19.5C3.5 14 6.5 8 11.5 5.5c-.5 2.5-.9 5.5.1 7.5C13 10.5 15.5 8 19 6.5c-.8 2.5-1.3 5.5-.6 7.5C20 12 22 10.5 24 10.5c-.9 2-1.8 5.5-1.2 8H4Z"/></svg>`,
+  redis:    `<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2L22 7.5 12 13 2 7.5Z" opacity=".45"/><path d="M2 7.5L12 13v9L2 16.5Z" opacity=".8"/><path d="M22 7.5L12 13v9l10-4.5Z"/></svg>`,
+};
+
+function dbIcon(type) {
+  return `<span class="db-icon ${type}">${DB_ICONS[type] || ""}</span>`;
+}
+
 const DB_CONN_URI = {
   postgres: (i) => `postgresql://${escape(i.user)}@localhost:${i.port}/postgres`,
   mysql:    (i) => `mysql://${escape(i.user)}@localhost:${i.port}`,
@@ -208,7 +220,7 @@ function renderInstances() {
           ${escape(i.name)}
         </div>
         <div class="card-badges">
-          <span class="db-badge ${i.type}">${label}</span>
+          <span class="db-badge ${i.type}">${dbIcon(i.type)}${label}</span>
           <span class="card-version">${t("card.version_prefix")}${escape(i.version)}</span>
           ${i.upgradeVersion ? `<span class="upgrade-badge">${t("card.upgrade", escape(i.upgradeVersion))}</span>` : ""}
         </div>
@@ -297,7 +309,7 @@ function renderVersions() {
     const group = document.createElement("div");
     group.className = "version-group";
     group.innerHTML = `<div class="version-group-header">
-      <span class="db-dot ${type}"></span>
+      ${dbIcon(type)}
       <span class="version-group-label">${label}</span>
     </div>`;
 

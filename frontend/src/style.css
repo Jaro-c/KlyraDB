@@ -5,13 +5,13 @@
 /* ---------- Themes ---------- */
 :root, html[data-theme="dark"] {
   --bg:            #05080f;
-  --bg-elev:       #0b1120;
-  --bg-elev-2:     #121929;
-  --border:        #172035;
-  --border-strong: #223050;
+  --bg-elev:       #0d1525;
+  --bg-elev-2:     #131c30;
+  --border:        #1e2d48;
+  --border-strong: #2a3d60;
   --text:          #dce6f8;
-  --text-dim:      #596288;
-  --text-mute:     #2d3a58;
+  --text-dim:      #8090b8;   /* was #596288 — nearly invisible on dark bg */
+  --text-mute:     #617090;   /* was #2d3a58 — was ~1.4:1 contrast, now ~3.7:1 */
   --accent:        #00e5a0;
   --accent-2:      #38b4f5;
   --accent-grad:   linear-gradient(135deg, #00e5a0 0%, #38b4f5 100%);
@@ -30,21 +30,26 @@
 }
 
 html[data-theme="light"] {
-  --bg:            #eff3fc;
+  --bg:            #eef2fb;
   --bg-elev:       #ffffff;
-  --bg-elev-2:     #e4ecf8;
-  --border:        #c8d3e8;
-  --border-strong: #afc0da;
-  --text:          #0c1629;
-  --text-dim:      #465070;
-  --text-mute:     #8896b5;
+  --bg-elev-2:     #e2eaf7;
+  --border:        #c4d0e6;
+  --border-strong: #a8bcda;
+  --text:          #0a1424;
+  --text-dim:      #3d4f6e;
+  --text-mute:     #5e6e8a;   /* was #8896b5 — ~3.3:1 → now ~4.6:1 on white */
   --accent:        #00a374;
   --accent-2:      #0077c8;
   --accent-grad:   linear-gradient(135deg, #00a374 0%, #0077c8 100%);
-  --danger:        #dc2626;
-  --warning:       #b45309;
+  --danger:        #cc2020;
+  --warning:       #a04800;
   --shadow:        0 8px 28px rgba(0,0,0,.12);
   --pulse-glow:    rgba(0,163,116,.5);
+  /* DB brand colors darkened for light backgrounds — dark variants have ~2.9:1 contrast on white */
+  --c-postgres:    #1a72d4;
+  --c-mysql:       #c84e00;
+  --c-mariadb:     #995010;
+  --c-redis:       #c02020;
 }
 
 /* ---------- Reset ---------- */
@@ -70,8 +75,8 @@ html, body {
 
 /* ---------- Sidebar ---------- */
 .sidebar {
-  background: #05070d;
-  background-image: radial-gradient(rgba(0,229,160,.04) 1px, transparent 1px);
+  background: var(--bg-sidebar, #05070d);
+  background-image: radial-gradient(var(--bg-sidebar-dot, rgba(0,229,160,.05)) 1px, transparent 1px);
   background-size: 18px 18px;
   border-right: 1px solid var(--border);
   display: flex;
@@ -79,10 +84,13 @@ html, body {
   padding: 18px 12px;
   position: relative;
 }
-html[data-theme="light"] .sidebar {
-  background: #e0e8f5;
-  background-image: radial-gradient(rgba(0,120,80,.07) 1px, transparent 1px);
-  background-size: 18px 18px;
+:root, html[data-theme="dark"] {
+  --bg-sidebar:     #05070d;
+  --bg-sidebar-dot: rgba(0,229,160,.05);
+}
+html[data-theme="light"] {
+  --bg-sidebar:     #dde6f4;
+  --bg-sidebar-dot: rgba(0,100,60,.07);
 }
 
 .brand {
@@ -96,11 +104,12 @@ html[data-theme="light"] .sidebar {
   display: grid; place-items: center;
   background: var(--accent-grad);
   border-radius: 8px;
-  color: #001a10;
+  color: var(--logo-fg, #001a10);
   flex-shrink: 0;
-  box-shadow: 0 0 18px rgba(0,229,160,.28);
+  box-shadow: 0 0 18px var(--pulse-glow);
 }
-html[data-theme="light"] .logo { color: #ffffff; box-shadow: 0 0 12px rgba(0,163,116,.2); }
+:root, html[data-theme="dark"] { --logo-fg: #001a10; }
+html[data-theme="light"]       { --logo-fg: #ffffff; }
 .logo svg { width: 18px; height: 18px; }
 .brand-text h1  { font-size: 14px; font-weight: 700; font-family: var(--mono); letter-spacing: -0.01em; }
 .brand-text span {
@@ -129,11 +138,12 @@ html[data-theme="light"] .logo { color: #ffffff; box-shadow: 0 0 12px rgba(0,163
 }
 .nav-item:hover { background: var(--bg-elev); color: var(--text); }
 .nav-item.active {
-  background: rgba(0,229,160,.07);
+  background: var(--nav-active-bg, rgba(0,229,160,.08));
   color: var(--text);
   border-left-color: var(--accent);
 }
-html[data-theme="light"] .nav-item.active { background: rgba(0,163,116,.09); }
+:root, html[data-theme="dark"] { --nav-active-bg: rgba(0,229,160,.08); }
+html[data-theme="light"]       { --nav-active-bg: rgba(0,163,116,.12); }
 .nav-item .dot {
   width: 5px; height: 5px; border-radius: 50%;
   background: var(--text-mute); flex-shrink: 0;
@@ -180,25 +190,32 @@ html[data-theme="light"] .nav-item.active { background: rgba(0,163,116,.09); }
 .view { flex: 1; overflow-y: auto; padding: 22px 28px 40px; }
 .hidden { display: none !important; }
 
-/* ---------- DB dots & badges ---------- */
-.db-dot {
-  display: inline-block;
-  width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+/* ---------- DB icons & badges ---------- */
+.db-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 16px; height: 16px; flex-shrink: 0;
 }
-.db-dot.postgres { background: var(--c-postgres); }
-.db-dot.mysql    { background: var(--c-mysql); }
-.db-dot.mariadb  { background: var(--c-mariadb); }
-.db-dot.redis    { background: var(--c-redis); }
+.db-icon svg { width: 100%; height: 100%; }
+.db-icon.postgres { color: var(--c-postgres); }
+.db-icon.mysql    { color: var(--c-mysql); }
+.db-icon.mariadb  { color: var(--c-mariadb); }
+.db-icon.redis    { color: var(--c-redis); }
 
 .db-badge {
+  display: inline-flex; align-items: center; gap: 4px;
   font-size: 9px; font-weight: 700; letter-spacing: 0.08em;
-  padding: 2px 6px; border-radius: 3px;
+  padding: 2px 7px 2px 5px; border-radius: 3px;
   text-transform: uppercase; font-family: var(--mono);
 }
+.db-badge .db-icon { width: 12px; height: 12px; }
 .db-badge.postgres { background: rgba(77,157,245,.14);  color: var(--c-postgres); }
-.db-badge.mysql    { background: rgba(255,125,42,.14);   color: var(--c-mysql); }
-.db-badge.mariadb  { background: rgba(212,112,40,.14);   color: var(--c-mariadb); }
-.db-badge.redis    { background: rgba(255,64,64,.14);    color: var(--c-redis); }
+.db-badge.mysql    { background: rgba(255,125,42,.14);  color: var(--c-mysql); }
+.db-badge.mariadb  { background: rgba(212,112,40,.14);  color: var(--c-mariadb); }
+.db-badge.redis    { background: rgba(255,64,64,.14);   color: var(--c-redis); }
+html[data-theme="light"] .db-badge.postgres { background: rgba(26,114,212,.10); }
+html[data-theme="light"] .db-badge.mysql    { background: rgba(200,78,0,.10);   }
+html[data-theme="light"] .db-badge.mariadb  { background: rgba(153,80,16,.10);  }
+html[data-theme="light"] .db-badge.redis    { background: rgba(192,32,32,.10);  }
 
 /* ---------- Filter bar ---------- */
 .filter-bar { display: flex; gap: 4px; margin-bottom: 18px; flex-wrap: wrap; }
@@ -214,18 +231,19 @@ html[data-theme="light"] .nav-item.active { background: rgba(0,163,116,.09); }
 
 /* ---------- Buttons ---------- */
 .btn-primary {
-  background: var(--accent-grad); color: #00180c;
+  background: var(--accent-grad); color: var(--btn-primary-fg, #00180c);
   border: none; padding: 8px 16px; border-radius: var(--radius-sm);
   font-weight: 600; font-size: 12px; cursor: pointer;
   display: inline-flex; align-items: center; gap: 6px;
   font-family: var(--mono); letter-spacing: 0.02em;
   transition: filter .15s, transform .1s;
 }
-.btn-primary:hover  { filter: brightness(1.1); }
+:root, html[data-theme="dark"] { --btn-primary-fg: #001a0e; }
+html[data-theme="light"]       { --btn-primary-fg: #ffffff; }
+.btn-primary:hover  { filter: brightness(1.08); }
 .btn-primary:active { transform: translateY(1px); }
 .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
 .btn-primary .plus  { font-size: 15px; line-height: 1; }
-html[data-theme="light"] .btn-primary { color: #ffffff; }
 
 .btn-ghost {
   background: transparent; color: var(--text-dim);
@@ -278,6 +296,10 @@ html[data-theme="light"] .btn-primary { color: #ffffff; }
 .card.running[data-type="mysql"]    { box-shadow: -3px 0 18px -1px rgba(255,125,42,.35); }
 .card.running[data-type="mariadb"]  { box-shadow: -3px 0 18px -1px rgba(212,112,40,.35); }
 .card.running[data-type="redis"]    { box-shadow: -3px 0 18px -1px rgba(255,64,64,.35); }
+html[data-theme="light"] .card.running[data-type="postgres"] { box-shadow: -3px 0 16px -1px rgba(26,114,212,.30); }
+html[data-theme="light"] .card.running[data-type="mysql"]    { box-shadow: -3px 0 16px -1px rgba(200,78,0,.30); }
+html[data-theme="light"] .card.running[data-type="mariadb"]  { box-shadow: -3px 0 16px -1px rgba(153,80,16,.30); }
+html[data-theme="light"] .card.running[data-type="redis"]    { box-shadow: -3px 0 16px -1px rgba(192,32,32,.30); }
 
 /* Scan line on running cards */
 .card.running::after {
@@ -413,11 +435,12 @@ html[data-theme="light"] .btn-primary { color: #ffffff; }
 /* ---------- Modal ---------- */
 .modal {
   position: fixed; inset: 0;
-  background: rgba(2,4,12,.78); backdrop-filter: blur(8px);
+  background: var(--modal-overlay, rgba(2,4,12,.78)); backdrop-filter: blur(8px);
   display: grid; place-items: center; z-index: 10;
   animation: fade .18s;
 }
-html[data-theme="light"] .modal { background: rgba(20,40,100,.35); }
+:root, html[data-theme="dark"] { --modal-overlay: rgba(2,4,12,.80); }
+html[data-theme="light"]       { --modal-overlay: rgba(10,20,50,.40); }
 @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
 
 .modal-card {
@@ -445,6 +468,7 @@ html[data-theme="light"] .modal { background: rgba(20,40,100,.35); }
   background: var(--bg); border: 1px solid var(--border-strong);
   color: var(--text); padding: 9px 12px; border-radius: var(--radius-sm);
   font-size: 13px; font-family: var(--mono); outline: none;
+  -webkit-appearance: none; appearance: none;
   transition: border-color .15s;
 }
 .modal-card input:focus,
@@ -458,6 +482,7 @@ html[data-theme="light"] .modal { background: rgba(20,40,100,.35); }
   font-size: 11px; cursor: pointer; font-family: var(--mono);
   transition: all .15s; text-align: left;
 }
+.db-type-btn .db-icon { width: 20px; height: 20px; }
 .db-type-btn:hover { color: var(--text); }
 .db-type-btn.active {
   color: var(--text); border-color: transparent;
@@ -507,6 +532,7 @@ html[data-theme="light"] .modal { background: rgba(20,40,100,.35); }
   background: var(--bg); border: 1px solid var(--border-strong);
   color: var(--text); padding: 7px 10px; border-radius: var(--radius-sm);
   font-size: 12px; font-family: var(--mono); outline: none;
+  -webkit-appearance: none; appearance: none;
   min-width: 170px; cursor: pointer;
 }
 .settings-select:focus { border-color: var(--accent); }
