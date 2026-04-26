@@ -1,6 +1,6 @@
 name: klyradb
 base: core22
-version: '0.4.0'
+version: '0.4.1'
 summary: Local database manager — PostgreSQL, MySQL, MariaDB, Redis
 description: |
   KlyraDB manages isolated PostgreSQL, MySQL, MariaDB and Redis instances.
