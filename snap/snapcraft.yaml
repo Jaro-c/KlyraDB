@@ -39,16 +39,18 @@ parts:
     plugin: nil
     source: .
     build-packages:
-      - golang-go
       - gcc
       - libgtk-3-dev
       - libwebkit2gtk-4.1-dev
       - pkg-config
       - npm
+      - curl
     override-build: |
+      curl -fsSL https://go.dev/dl/go1.24.3.linux-amd64.tar.gz | tar -C /usr/local -xz
+      export PATH="/usr/local/go/bin:$HOME/go/bin:$PATH"
       export GOFLAGS="-mod=mod"
-      go install github.com/wailsapp/wails/v2/cmd/wails@latest
-      $HOME/go/bin/wails build -platform linux/amd64 -tags webkit2_41
+      go install github.com/wailsapp/wails/v2/cmd/wails@v2.9.2
+      wails build -platform linux/amd64 -tags webkit2_41
       install -D build/bin/klyradb $CRAFT_PART_INSTALL/bin/klyradb
       install -D build/appicon.png $CRAFT_PART_INSTALL/share/icons/hicolor/512x512/apps/klyradb.png
       install -D snap/local/klyradb.desktop $CRAFT_PART_INSTALL/share/applications/klyradb.desktop
