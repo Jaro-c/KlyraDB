@@ -193,12 +193,14 @@ function renderInstances() {
   }
   empty.classList.add("hidden");
 
-  filtered.forEach((i) => {
+  filtered.forEach((i, idx) => {
     const running = i.status === "running";
     const uri     = (DB_CONN_URI[i.type] || DB_CONN_URI.postgres)(i);
     const label   = DB_LABELS[i.type] || i.type;
     const el      = document.createElement("div");
     el.className  = "card" + (running ? " running" : "");
+    el.dataset.type = i.type;
+    el.style.animationDelay = `${idx * 45}ms`;
     el.innerHTML  = `
       <div class="card-head">
         <div class="card-name">
