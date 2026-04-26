@@ -35,4 +35,4 @@ That's it. No dependencies, no setup.
 
 ## License
 
-MIT
+Apache 2.0
