@@ -7,7 +7,7 @@ description: |
   No Docker. No config files. Just click and run.
 
   Bundled engines (no host installation required):
-    PostgreSQL: 14, 15, 16, 17
+    PostgreSQL: 16, 17, 18
     MySQL: 8.0
     Redis: 6.x
 
@@ -60,10 +60,9 @@ parts:
     stage-packages:
       - libwebkit2gtk-4.1-0
       - libgtk-3-0
-      - postgresql-14
-      - postgresql-15
       - postgresql-16
       - postgresql-17
+      - postgresql-18
       - postgresql-common
       - postgresql-client-common
       - mysql-server-8.0

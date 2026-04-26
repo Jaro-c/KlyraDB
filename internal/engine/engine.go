@@ -62,9 +62,10 @@ type Instance struct {
 	PIDFile   string    `json:"pidFile"`
 	ConfFile  string    `json:"confFile,omitempty"`
 	User      string    `json:"user"`
-	Status    Status    `json:"status"`
-	CreatedAt time.Time `json:"createdAt"`
-	LastError string    `json:"lastError,omitempty"`
+	Status         Status    `json:"status"`
+	CreatedAt      time.Time `json:"createdAt"`
+	LastError      string    `json:"lastError,omitempty"`
+	UpgradeVersion string    `json:"upgradeVersion,omitempty"`
 }
 
 type Version struct {

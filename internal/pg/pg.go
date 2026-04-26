@@ -11,9 +11,9 @@ import (
 	"klyradb/internal/engine"
 )
 
-// supportedMajors — PG versions with active community support as of 2026-04.
-// PG 13 EOL 2025-11, excluded.
-var supportedMajors = []string{"17", "16", "15", "14"}
+// supportedMajors — PG versions with active support as of 2026-04.
+// PG 15 EOL 2027-11, dropped to keep list short. PG 18 latest stable.
+var supportedMajors = []string{"18", "17", "16"}
 
 type PGEngine struct{}
 

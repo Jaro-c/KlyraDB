@@ -247,6 +247,14 @@ html, body {
   font-family: var(--mono); font-size: 11px;
   padding: 3px 8px; border-radius: 999px; border: 1px solid var(--border);
 }
+.upgrade-badge {
+  font-size: 11px; font-family: var(--mono);
+  color: var(--warning);
+  background: rgba(255,184,107,.10);
+  border: 1px solid rgba(255,184,107,.28);
+  border-radius: 999px; padding: 3px 8px;
+  cursor: default;
+}
 
 .card-meta {
   display: grid; grid-template-columns: 1fr 1fr;

@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"strconv"
 	"sync"
 	"time"
 
@@ -96,9 +97,40 @@ func (m *Manager) Instances() []engine.Instance {
 	defer m.mu.RUnlock()
 	out := make([]engine.Instance, 0, len(m.instances))
 	for _, i := range m.instances {
-		out = append(out, *i)
+		inst := *i
+		inst.UpgradeVersion = m.latestAvailable(inst.Type, inst.Version)
+		out = append(out, inst)
 	}
 	return out
+}
+
+// latestAvailable returns the highest installed version newer than currentVersion
+// for the given DB type. Only works for integer-major versions (PostgreSQL).
+func (m *Manager) latestAvailable(t engine.DBType, currentVersion string) string {
+	eng, ok := m.engines[t]
+	if !ok {
+		return ""
+	}
+	cur, err := strconv.Atoi(currentVersion)
+	if err != nil {
+		return ""
+	}
+	best := 0
+	bestStr := ""
+	for _, v := range eng.Versions() {
+		if !v.Installed {
+			continue
+		}
+		maj, err := strconv.Atoi(v.Major)
+		if err != nil {
+			continue
+		}
+		if maj > cur && maj > best {
+			best = maj
+			bestStr = v.Major
+		}
+	}
+	return bestStr
 }
 
 func (m *Manager) Create(name, dbType, version string, port int) (engine.Instance, error) {

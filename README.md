@@ -26,7 +26,7 @@ That's it. No dependencies, no setup.
 
 | Engine     | Versions bundled  | Also detects from host |
 |------------|-------------------|------------------------|
-| PostgreSQL | 14, 15, 16, 17    |                        |
+| PostgreSQL | 16, 17, 18        |                        |
 | MySQL      | 8.0               | 8.4                    |
 | MariaDB    | —                 | 10.6, 10.11, 11.4      |
 | Redis      | 6.x               | 7.2, 7.4               |

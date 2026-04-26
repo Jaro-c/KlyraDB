@@ -132,6 +132,7 @@ function renderInstances() {
         <div class="card-badges">
           <span class="db-badge ${i.type}">${label}</span>
           <span class="card-version">${t("card.version_prefix")}${escape(i.version)}</span>
+          ${i.upgradeVersion ? `<span class="upgrade-badge">${t("card.upgrade", escape(i.upgradeVersion))}</span>` : ""}
         </div>
       </div>
       <div class="card-meta">
