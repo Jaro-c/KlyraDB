@@ -3,6 +3,7 @@ package mysql
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -51,6 +52,9 @@ func TestVersions_SnapNoBinaries(t *testing.T) {
 }
 
 func TestVersions_SnapWithMockBinary(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("shell script mock binaries not supported on Windows")
+	}
 	tmp := t.TempDir()
 	sbinDir := filepath.Join(tmp, "opt/klyra-mysql/sbin")
 	if err := os.MkdirAll(sbinDir, 0o755); err != nil {
@@ -172,6 +176,9 @@ func TestWriteMyConf(t *testing.T) {
 }
 
 func TestDetectMySQLVersion_NotMariaDB(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("shell script mock binaries not supported on Windows")
+	}
 	tmp := t.TempDir()
 	script := "#!/bin/sh\necho '/usr/sbin/mysqld  Ver 8.0.36 Distrib 8.0.36, for Linux (x86_64)'\n"
 	bin := filepath.Join(tmp, "mysqld")

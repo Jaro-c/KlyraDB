@@ -59,12 +59,12 @@ func (e *MariaDBEngine) Create(inst *engine.Instance) error {
 	}
 	for _, dir := range []string{inst.DataDir, filepath.Dir(inst.LogFile), filepath.Dir(inst.PIDFile), filepath.Dir(inst.ConfFile)} {
 		if dir != "" {
-			if err := os.MkdirAll(dir, 0o755); err != nil {
+			if err := os.MkdirAll(dir, 0o750); err != nil {
 				return err
 			}
 		}
 	}
-	if err := os.Chmod(inst.DataDir, 0o700); err != nil {
+	if err := os.Chmod(inst.DataDir, 0o700); err != nil { //nolint:gosec
 		return err
 	}
 
@@ -251,7 +251,7 @@ bind-address = 127.0.0.1
 		content += "plugin-dir = " + filepath.Join(snap, "opt/klyra-mariadb/lib/mysql/plugin") + "\n"
 		content += "lc-messages-dir = " + filepath.Join(snap, "opt/klyra-mariadb/share/mysql") + "\n"
 	}
-	return os.WriteFile(inst.ConfFile, []byte(content), 0o644)
+	return os.WriteFile(inst.ConfFile, []byte(content), 0o600)
 }
 
 func waitReady(inst *engine.Instance) error {

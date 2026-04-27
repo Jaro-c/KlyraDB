@@ -55,12 +55,12 @@ func (e *MongoEngine) Create(inst *engine.Instance) error {
 	}
 	for _, dir := range []string{inst.DataDir, filepath.Dir(inst.LogFile), filepath.Dir(inst.PIDFile), filepath.Dir(inst.ConfFile)} {
 		if dir != "" {
-			if err := os.MkdirAll(dir, 0o755); err != nil {
+			if err := os.MkdirAll(dir, 0o750); err != nil {
 				return err
 			}
 		}
 	}
-	if err := os.Chmod(inst.DataDir, 0o700); err != nil {
+	if err := os.Chmod(inst.DataDir, 0o700); err != nil { //nolint:gosec
 		return err
 	}
 	return writeConf(inst)
@@ -183,7 +183,7 @@ processManagement:
   fork: true
   pidFilePath: %s
 `, inst.DataDir, inst.LogFile, inst.Port, inst.PIDFile)
-	return os.WriteFile(inst.ConfFile, []byte(content), 0o644)
+	return os.WriteFile(inst.ConfFile, []byte(content), 0o600)
 }
 
 func killFromPIDFile(pidFile string) error {

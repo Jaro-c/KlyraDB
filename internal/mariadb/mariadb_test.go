@@ -3,6 +3,7 @@ package mariadb
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -51,6 +52,9 @@ func TestVersions_SnapNoBinaries(t *testing.T) {
 }
 
 func TestVersions_SnapWithMockBinary(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("shell script mock binaries not supported on Windows")
+	}
 	tmp := t.TempDir()
 	sbinDir := filepath.Join(tmp, "opt/klyra-mariadb/sbin")
 	if err := os.MkdirAll(sbinDir, 0o755); err != nil {
@@ -169,6 +173,9 @@ func TestWriteMyConf(t *testing.T) {
 }
 
 func TestDetectMariaDBVersion(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("shell script mock binaries not supported on Windows")
+	}
 	tmp := t.TempDir()
 	// Mock binary with valid MariaDB version output
 	script := "#!/bin/sh\necho '/sbin/mariadbd  Ver 10.11.6-MariaDB Distrib 10.11.6-MariaDB, for debian-linux-gnu (x86_64)'\n"
@@ -186,6 +193,9 @@ func TestDetectMariaDBVersion(t *testing.T) {
 }
 
 func TestDetectMariaDBVersion_NotMariaDB(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("shell script mock binaries not supported on Windows")
+	}
 	tmp := t.TempDir()
 	// MySQL binary — should return empty
 	script := "#!/bin/sh\necho '/usr/sbin/mysqld  Ver 8.0.36 Distrib 8.0.36, for Linux (x86_64)'\n"

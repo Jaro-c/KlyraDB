@@ -74,7 +74,7 @@ func (e *PGEngine) Create(inst *engine.Instance) error {
 	if err != nil {
 		return err
 	}
-	if err := os.MkdirAll(filepath.Dir(inst.LogFile), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(inst.LogFile), 0o750); err != nil {
 		return err
 	}
 	if err := os.MkdirAll(inst.DataDir, 0o700); err != nil {

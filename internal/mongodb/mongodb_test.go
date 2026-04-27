@@ -3,6 +3,7 @@ package mongodb
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -51,6 +52,9 @@ func TestVersions_SnapNoBinaries(t *testing.T) {
 }
 
 func TestVersions_SnapWithMockBinary(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("shell script mock binaries not supported on Windows")
+	}
 	tmp := t.TempDir()
 	binDir := filepath.Join(tmp, "opt/klyra-mongodb/bin")
 	if err := os.MkdirAll(binDir, 0o755); err != nil {
@@ -170,6 +174,9 @@ func TestFindBinary_SnapContext(t *testing.T) {
 }
 
 func TestDetectVersion(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("shell script mock binaries not supported on Windows")
+	}
 	tmp := t.TempDir()
 	script := "#!/bin/sh\necho 'db version v8.0.5'\necho 'Build Info: ...'\n"
 	bin := filepath.Join(tmp, "mongod")

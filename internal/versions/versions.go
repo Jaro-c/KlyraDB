@@ -1,6 +1,7 @@
 package versions
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"sort"
@@ -88,7 +89,11 @@ func dedupByMajor(v []string) []string {
 
 func fetchCycles(product string) []string {
 	c := &http.Client{Timeout: 5 * time.Second}
-	resp, err := c.Get("https://endoflife.date/api/" + product + ".json")
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "https://endoflife.date/api/"+product+".json", nil)
+	if err != nil {
+		return nil
+	}
+	resp, err := c.Do(req)
 	if err != nil {
 		return nil
 	}

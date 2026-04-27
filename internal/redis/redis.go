@@ -55,7 +55,7 @@ func (e *RedisEngine) Create(inst *engine.Instance) error {
 	}
 	for _, dir := range []string{inst.DataDir, filepath.Dir(inst.LogFile), filepath.Dir(inst.PIDFile), filepath.Dir(inst.ConfFile)} {
 		if dir != "" {
-			if err := os.MkdirAll(dir, 0o755); err != nil {
+			if err := os.MkdirAll(dir, 0o750); err != nil {
 				return err
 			}
 		}
@@ -168,7 +168,7 @@ logfile %s
 dir %s
 save ""
 `, inst.Port, inst.PIDFile, inst.LogFile, inst.DataDir)
-	return os.WriteFile(inst.ConfFile, []byte(content), 0o644)
+	return os.WriteFile(inst.ConfFile, []byte(content), 0o600)
 }
 
 func killFromPIDFile(pidFile string) error {

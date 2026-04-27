@@ -3,6 +3,7 @@ package redis
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -51,6 +52,9 @@ func TestVersions_SnapNoBinaries(t *testing.T) {
 }
 
 func TestVersions_SnapWithMockBinary(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("shell script mock binaries not supported on Windows")
+	}
 	tmp := t.TempDir()
 	binDir := filepath.Join(tmp, "usr/bin")
 	if err := os.MkdirAll(binDir, 0o755); err != nil {
@@ -182,6 +186,9 @@ func TestFindBinary_SnapContext(t *testing.T) {
 }
 
 func TestDetectRedisVersion(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("shell script mock binaries not supported on Windows")
+	}
 	// detectRedisVersion parses "Redis server v=7.4.0 sha=..."
 	// We can test by creating a mock binary in a temp dir
 	tmp := t.TempDir()

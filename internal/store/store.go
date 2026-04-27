@@ -13,7 +13,7 @@ type Store struct {
 
 func New() (*Store, error) {
 	dir := engine.BaseDir()
-	if err := os.MkdirAll(dir, 0o755); err != nil {
+	if err := os.MkdirAll(dir, 0o750); err != nil {
 		return nil, err
 	}
 	return &Store{path: filepath.Join(dir, "instances.json")}, nil
@@ -31,5 +31,5 @@ func (s *Store) ReadRaw() ([]byte, error) {
 }
 
 func (s *Store) WriteRaw(b []byte) error {
-	return os.WriteFile(s.path, b, 0o644)
+	return os.WriteFile(s.path, b, 0o600)
 }

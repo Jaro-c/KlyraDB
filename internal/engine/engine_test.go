@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"path/filepath"
+	"runtime"
 	"testing"
 )
 
@@ -44,6 +46,9 @@ func TestPortOpen_listening(t *testing.T) {
 }
 
 func TestCheckPID_alive(t *testing.T) {
+	if runtime.GOOS != "linux" {
+		t.Skip("CheckPID uses /proc, Linux only")
+	}
 	f, err := os.CreateTemp(t.TempDir(), "pid")
 	if err != nil {
 		t.Fatal(err)
@@ -83,6 +88,9 @@ func TestCheckPID_missing(t *testing.T) {
 }
 
 func TestCheckPID_multiline(t *testing.T) {
+	if runtime.GOOS != "linux" {
+		t.Skip("CheckPID uses /proc, Linux only")
+	}
 	f, err := os.CreateTemp(t.TempDir(), "pid")
 	if err != nil {
 		t.Fatal(err)
@@ -110,16 +118,19 @@ func TestBaseDir_snapUserCommon(t *testing.T) {
 func TestBaseDir_default(t *testing.T) {
 	t.Setenv("SNAP_USER_COMMON", "")
 	home, _ := os.UserHomeDir()
-	want := home + "/.local/share/klyradb"
+	want := filepath.Join(home, ".local", "share", "klyradb")
 	if got := BaseDir(); got != want {
 		t.Errorf("expected %s, got %s", want, got)
 	}
 }
 
 func TestSnapPath_inside(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("snap paths are Linux/macOS only")
+	}
 	t.Setenv("SNAP", "/snap/klyradb/current")
 	got := SnapPath("usr/bin/redis-server")
-	want := "/snap/klyradb/current/usr/bin/redis-server"
+	want := filepath.Join("/snap/klyradb/current", "usr/bin/redis-server")
 	if got != want {
 		t.Errorf("expected %s, got %s", want, got)
 	}
