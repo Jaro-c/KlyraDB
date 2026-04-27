@@ -1,88 +1,119 @@
+<div align="center">
+
+<img src="build/appicon.png" width="120" alt="KlyraDB logo" />
+
 # KlyraDB
 
-> Local database manager for Linux, macOS and Windows.  
-> Spin up isolated PostgreSQL, MySQL, MariaDB, Redis and MongoDB instances — no Docker, no config files, just click and run.
+**Local database manager for developers.**  
+Spin up isolated PostgreSQL, MySQL, MariaDB, Redis and MongoDB instances in seconds —  
+no Docker, no config files, no root access.
 
-[![CI](https://github.com/Jaro-c/KlyraDB/actions/workflows/ci.yml/badge.svg)](https://github.com/Jaro-c/KlyraDB/actions/workflows/ci.yml)
-[![Release](https://github.com/Jaro-c/KlyraDB/actions/workflows/release.yml/badge.svg)](https://github.com/Jaro-c/KlyraDB/actions/workflows/release.yml)
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+[![CI](https://img.shields.io/github/actions/workflow/status/Jaro-c/KlyraDB/ci.yml?branch=main&label=CI&style=flat-square)](https://github.com/Jaro-c/KlyraDB/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/Jaro-c/KlyraDB?style=flat-square&color=00e5a0)](https://github.com/Jaro-c/KlyraDB/releases/latest)
+[![Snap Store](https://img.shields.io/badge/Snap%20Store-klyradb-82BEA0?style=flat-square&logo=snapcraft)](https://snapcraft.io/klyradb)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square)](LICENSE)
+
+<br/>
+
+[**Download**](#install) · [**Features**](#features) · [**Build from source**](#build-from-source)
+
+</div>
 
 ---
 
 ## Install
 
-**Linux — Snap Store**
+<details open>
+<summary><strong>Linux — Snap (recommended)</strong></summary>
+
 ```bash
 sudo snap install klyradb
 ```
 
-**Linux / macOS / Windows — Direct download**
+Engines are bundled — no extra packages needed.
 
-Download the latest binary from [Releases](https://github.com/Jaro-c/KlyraDB/releases/latest):
+</details>
 
-| Platform | File |
-|----------|------|
-| Linux    | `klyradb-linux-amd64` |
-| Windows  | `klyradb-windows-amd64.exe` or `klyradb-windows-amd64-setup.exe` |
-| macOS    | `klyradb-macos-arm64.zip` |
+<details>
+<summary><strong>Linux / macOS / Windows — Direct download</strong></summary>
 
----
+<br/>
 
-## What it does
+Download from [**Releases →**](https://github.com/Jaro-c/KlyraDB/releases/latest)
 
-KlyraDB lets you create and manage fully isolated database instances directly on your machine — each with its own port, data directory and config. No root access required, no system-wide packages touched.
+| Platform | Download |
+|----------|----------|
+| 🐧 Linux | `klyradb-linux-amd64` |
+| 🪟 Windows | `klyradb-windows-amd64-setup.exe` |
+| 🍎 macOS | `klyradb-macos-arm64.zip` |
 
-- **Create** a new instance in seconds — pick a DB type, a version, and a name
-- **Start / Stop** instances individually with one click
-- **Copy connection URI** to clipboard instantly
-- **Auto-detects installed versions** — queries the official release channels at startup and always shows the 3 most recent major versions for each engine
-- **Upgrade prompt** — notified when a newer version is available for an existing instance
-- **30+ languages** — UI adapts to your system locale automatically
-- **Dark and light theme**
+</details>
 
 ---
 
-## Supported databases
+## Features
 
-| Engine     | Default port | Version source |
-|------------|-------------|----------------|
-| PostgreSQL | 5432        | Dynamic — latest 3 majors from postgresql.org |
-| MySQL      | 3306        | Dynamic — latest 3 majors from mysql.com |
-| MariaDB    | 3316        | Dynamic — latest 3 majors from mariadb.org |
-| Redis      | 6379        | Dynamic — latest 3 majors from redis.io |
-| MongoDB    | 27017       | Dynamic — latest 3 majors from mongodb.com |
+### 🗄️ Five databases, one interface
 
-Version lists are fetched from [endoflife.date](https://endoflife.date) at startup and cached for the session. If the network is unavailable the app falls back to a built-in list.
+| Engine | Default port | Versions shown |
+|--------|-------------|----------------|
+| **PostgreSQL** | 5432 | Latest 3 majors |
+| **MySQL** | 3306 | Latest 3 majors |
+| **MariaDB** | 3316 | Latest 3 majors |
+| **Redis** | 6379 | Latest 3 majors |
+| **MongoDB** | 27017 | Latest 3 majors |
 
-> **Snap install:** PostgreSQL, MySQL, MariaDB and Redis engines are bundled inside the snap — no host installation required. MongoDB and any extra versions are detected from the host.
+Version lists are fetched live from [endoflife.date](https://endoflife.date) at startup so you always see the most recent releases. Falls back to a built-in list when offline.
+
+### ⚡ Zero friction
+
+- **One click** to create, start, stop or delete any instance
+- **No root required** — everything runs in user space
+- **No conflicts** — each instance has its own port and data directory
+- **Copy connection URI** to clipboard instantly and paste into any client
+
+### 🔼 Stay up to date
+
+KlyraDB detects when a newer major version is available for a running instance and shows an upgrade prompt — so you never fall behind without realizing it.
+
+### 🌍 Built for everyone
+
+Available in **30+ languages**, auto-detected from your system locale. Full RTL support for Arabic and Hebrew. Dark and light theme.
+
+---
+
+## How it works
+
+```
+Create instance → pick DB type + version + name
+        ↓
+KlyraDB allocates a free port, initializes the data directory,
+writes an isolated config, and hands you a connection URI.
+        ↓
+Start / Stop / Delete at any time — nothing touches the rest of your system.
+```
 
 ---
 
 ## Build from source
 
-**Requirements:** Go 1.26+, Node.js, and [Wails v2](https://wails.io/docs/gettingstarted/installation)
+**Requirements:** Go 1.26+, Node.js, [Wails v2](https://wails.io/docs/gettingstarted/installation)
 
 ```bash
 # Install Wails CLI
 go install github.com/wailsapp/wails/v2/cmd/wails@latest
 
-# Clone and build
+# Clone
 git clone https://github.com/Jaro-c/KlyraDB.git
 cd KlyraDB
 
-# Linux
-wails build -tags webkit2_41
-
-# macOS
-wails build
-
-# Windows
-wails build -nsis
+# Build
+wails build -tags webkit2_41   # Linux
+wails build                    # macOS
+wails build -nsis              # Windows (requires NSIS)
 ```
 
-Binary lands in `build/bin/`.
-
-**Run tests:**
+**Tests:**
 ```bash
 go test ./internal/...
 ```
@@ -93,22 +124,30 @@ go test ./internal/...
 
 ```
 internal/
-  engine/    — shared types, port utils, PID checks
-  manager/   — instance lifecycle, port allocation, persistence
-  store/     — JSON state file (SNAP_USER_COMMON or ~/.local/share/klyradb)
-  versions/  — dynamic version detection via endoflife.date API
-  pg/        — PostgreSQL engine
-  mysql/     — MySQL engine
-  mariadb/   — MariaDB engine
-  redis/     — Redis engine
-  mongodb/   — MongoDB engine
-  i18n/      — locale loading and detection
-frontend/    — vanilla JS + CSS (no framework)
-snap/        — snapcraft.yaml and desktop entry
+├── engine/    shared types, port utils, PID checks
+├── manager/   instance lifecycle, port allocation, persistence
+├── store/     JSON state (SNAP_USER_COMMON or ~/.local/share/klyradb)
+├── versions/  live version detection via endoflife.date
+├── pg/        PostgreSQL engine
+├── mysql/     MySQL engine
+├── mariadb/   MariaDB engine
+├── redis/     Redis engine
+├── mongodb/   MongoDB engine
+└── i18n/      locale loading and system detection
+frontend/      vanilla JS + CSS (no framework, no build step)
+snap/          snapcraft.yaml and desktop entry
 ```
 
 ---
 
-## License
+## Contributing
 
-[Apache 2.0](LICENSE)
+Issues and pull requests are welcome. Open an [issue](https://github.com/Jaro-c/KlyraDB/issues) to discuss a bug or feature before sending a PR.
+
+---
+
+<div align="center">
+
+Made with Go + [Wails](https://wails.io) · [Apache 2.0 License](LICENSE)
+
+</div>
