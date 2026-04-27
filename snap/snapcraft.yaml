@@ -12,8 +12,8 @@ description: |
     MariaDB: 10.6
     Redis: 6.x
 
-grade: devel
-confinement: classic
+grade: stable
+confinement: strict
 compression: lzo
 
 architectures:
@@ -26,10 +26,19 @@ package-repositories:
     suites: [jammy-pgdg]
     components: [main]
 
+plugs:
+  network:
+  network-bind:
+  system-observe:
+
 apps:
   klyradb:
     command: bin/klyradb
     desktop: share/applications/klyradb.desktop
+    plugs:
+      - network
+      - network-bind
+      - system-observe
     environment:
       LD_LIBRARY_PATH: "$SNAP/usr/lib/$SNAP_ARCH-linux-gnu:$SNAP/usr/lib:$SNAP/opt/klyra-mysql/lib:$SNAP/opt/klyra-mariadb/lib:$LD_LIBRARY_PATH"
       PATH: "$SNAP/opt/klyra-mysql/sbin:$SNAP/opt/klyra-mysql/bin:$SNAP/opt/klyra-mariadb/sbin:$SNAP/opt/klyra-mariadb/bin:$SNAP/usr/lib/postgresql/18/bin:$SNAP/usr/lib/postgresql/17/bin:$SNAP/usr/lib/postgresql/16/bin:$SNAP/usr/sbin:$SNAP/usr/bin:$PATH"
