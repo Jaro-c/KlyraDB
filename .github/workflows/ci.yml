@@ -25,7 +25,7 @@ jobs:
 
       - name: Upload coverage
         if: matrix.os == 'ubuntu-latest'
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238 # v4
         with:
           files: coverage.out
           fail_ci_if_error: false
@@ -41,7 +41,7 @@ jobs:
           cache: true
 
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@55c2c1448f86e01eaae002a5a3a9624417608d84 # v6
         with:
           version: latest
           args: --timeout=5m
@@ -57,6 +57,6 @@ jobs:
           cache: true
 
       - name: gosec
-        uses: securego/gosec@master
+        uses: securego/gosec@4ead098510926e1015958a36dc966bfcb7f6ee11 # master
         with:
           args: -exclude=G204,G304 ./...
