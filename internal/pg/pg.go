@@ -6,13 +6,14 @@ import (
 	"os/exec"
 	"path/filepath"
 	"sort"
+	"strings"
 	"time"
 
 	"klyradb/internal/engine"
 	"klyradb/internal/versions"
 )
 
-var pgFallback = []string{"18", "17", "16"}
+var pgFallback = []string{"18.3", "17.9", "16.13"}
 
 func pgMajors() []string { return versions.FetchLatest("postgresql", 3, pgFallback) }
 
@@ -54,10 +55,13 @@ func (e *PGEngine) Versions() []engine.Version {
 	majors := pgMajors()
 	out := make([]engine.Version, 0, len(majors))
 	for _, m := range majors {
-		v := engine.Version{Type: engine.TypePostgres, Major: m, Label: "PostgreSQL " + m}
-		if bin, ok := found[m]; ok {
+		// m is a patch version like "18.3"; directory is named by major "18"
+		dirKey := versions.MajorKey(m)
+		v := engine.Version{Type: engine.TypePostgres, Major: dirKey, Label: "PostgreSQL " + m, LatestPatch: m}
+		if bin, ok := found[dirKey]; ok {
 			v.BinPath = bin
 			v.Installed = true
+			v.InstalledVersion = detectPGVersion(bin)
 		}
 		out = append(out, v)
 	}
@@ -148,6 +152,18 @@ func (e *PGEngine) CheckStatus(inst *engine.Instance) engine.Status {
 		return engine.StatusRunning
 	}
 	return engine.StatusStopped
+}
+
+func detectPGVersion(binDir string) string {
+	out, err := exec.Command(filepath.Join(binDir, "postgres"), "--version").Output()
+	if err != nil {
+		return ""
+	}
+	fields := strings.Fields(strings.TrimSpace(string(out)))
+	if len(fields) > 0 {
+		return fields[len(fields)-1]
+	}
+	return ""
 }
 
 func (e *PGEngine) binFor(version string) (string, error) {

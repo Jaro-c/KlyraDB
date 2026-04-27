@@ -181,6 +181,20 @@
       </div>
     </div>
 
+    <!-- Install Progress Modal -->
+    <div id="install-modal" class="modal hidden">
+      <div class="modal-card install-card">
+        <div class="install-header">
+          <h3 id="install-modal-title">Installing…</h3>
+          <span id="install-spinner" class="install-spinner"></span>
+        </div>
+        <div id="install-log" class="install-log"></div>
+        <div class="modal-actions">
+          <button class="btn-ghost" id="install-close" disabled data-i18n="btn.cancel"></button>
+        </div>
+      </div>
+    </div>
+
     <div id="toast" class="toast hidden"></div>
 
     <script type="module" src="src/main.js"></script>

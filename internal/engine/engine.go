@@ -53,10 +53,12 @@ const (
 type Status string
 
 const (
-	StatusStopped Status = "stopped"
-	StatusRunning Status = "running"
-	StatusError   Status = "error"
-	StatusInit    Status = "initializing"
+	StatusStopped      Status = "stopped"
+	StatusRunning      Status = "running"
+	StatusError        Status = "error"
+	StatusInit         Status = "initializing"
+	StatusNeedsInstall Status = "needs_install"
+	StatusInstalling   Status = "installing"
 )
 
 type Instance struct {
@@ -74,14 +76,17 @@ type Instance struct {
 	CreatedAt      time.Time `json:"createdAt"`
 	LastError      string    `json:"lastError,omitempty"`
 	UpgradeVersion string    `json:"upgradeVersion,omitempty"`
+	PatchUpdate    string    `json:"patchUpdate,omitempty"`
 }
 
 type Version struct {
-	Type      DBType `json:"type"`
-	Major     string `json:"major"`
-	BinPath   string `json:"binPath"`
-	Installed bool   `json:"installed"`
-	Label     string `json:"label"`
+	Type             DBType `json:"type"`
+	Major            string `json:"major"`
+	BinPath          string `json:"binPath"`
+	Installed        bool   `json:"installed"`
+	Label            string `json:"label"`
+	LatestPatch      string `json:"latestPatch,omitempty"`
+	InstalledVersion string `json:"installedVersion,omitempty"`
 }
 
 type Engine interface {

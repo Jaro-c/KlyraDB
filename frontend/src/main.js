@@ -209,14 +209,29 @@ function renderInstances() {
   empty.classList.add("hidden");
 
   filtered.forEach((i, idx) => {
-    const running = i.status === "running";
-    const uri     = (DB_CONN_URI[i.type] || DB_CONN_URI.postgres)(i);
-    const label   = DB_LABELS[i.type] || i.type;
-    const el      = document.createElement("div");
-    el.className  = "card" + (running ? " running" : "");
-    el.dataset.type = i.type;
+    const running        = i.status === "running";
+    const needsInstall   = i.status === "needs_install";
+    const installing     = i.status === "installing";
+    const hasPatch       = !!i.patchUpdate;
+    const uri            = (DB_CONN_URI[i.type] || DB_CONN_URI.postgres)(i);
+    const label          = DB_LABELS[i.type] || i.type;
+    const el             = document.createElement("div");
+    el.className         = "card" + (running ? " running" : "") + (needsInstall ? " needs-install" : "");
+    el.dataset.type      = i.type;
     el.style.animationDelay = `${idx * 45}ms`;
-    el.innerHTML  = `
+
+    let actionBtn;
+    if (needsInstall) {
+      actionBtn = `<button class="btn-mini install-btn" data-act="install" data-id="${i.id}">⬇ ${t("btn.install") || "Install"}</button>`;
+    } else if (installing) {
+      actionBtn = `<button class="btn-mini" disabled>⏳ ${t("btn.installing") || "Installing…"}</button>`;
+    } else if (running) {
+      actionBtn = `<button class="btn-mini" data-act="stop" data-id="${i.id}">${t("btn.stop")}</button>`;
+    } else {
+      actionBtn = `<button class="btn-mini" data-act="start" data-id="${i.id}">${t("btn.start")}</button>`;
+    }
+
+    el.innerHTML = `
       <div class="card-head">
         <div class="card-name">
           <span class="status-dot ${i.status}"></span>
@@ -226,6 +241,7 @@ function renderInstances() {
           <span class="db-badge ${i.type}">${dbIcon(i.type)}${label}</span>
           <span class="card-version">${t("card.version_prefix")}${escape(i.version)}</span>
           ${i.upgradeVersion ? `<span class="upgrade-badge">${t("card.upgrade", escape(i.upgradeVersion))}</span>` : ""}
+          ${hasPatch ? `<span class="patch-badge">↑ ${escape(i.patchUpdate)}</span>` : ""}
         </div>
       </div>
       <div class="card-meta">
@@ -238,17 +254,18 @@ function renderInstances() {
           <span class="meta-label">${t("card.user")}</span>
           <span class="meta-value">${escape(i.user)}</span>
         </div>` : ""}
+        ${needsInstall ? "" : `
         <div class="meta-row" style="grid-column: 1 / -1">
           <span class="meta-label">${t("card.conn")}</span>
           <span class="meta-value dim">${uri}</span>
-        </div>
+        </div>`}
       </div>
-      ${i.lastError ? `<div class="card-error">${escape(i.lastError)}</div>` : ""}
+      ${needsInstall ? `<div class="card-notice">Binary not installed. Click Install to download and configure automatically.</div>` : ""}
+      ${i.lastError && !needsInstall ? `<div class="card-error">${escape(i.lastError)}</div>` : ""}
       <div class="card-actions">
-        ${running
-          ? `<button class="btn-mini" data-act="stop"  data-id="${i.id}">${t("btn.stop")}</button>`
-          : `<button class="btn-mini" data-act="start" data-id="${i.id}">${t("btn.start")}</button>`}
-        <button class="btn-mini" data-act="copy"   data-id="${i.id}">${t("btn.copy_uri")}</button>
+        ${actionBtn}
+        ${!needsInstall && !installing ? `<button class="btn-mini" data-act="copy" data-id="${i.id}">${t("btn.copy_uri")}</button>` : ""}
+        ${hasPatch ? `<button class="btn-mini patch-btn" data-act="patch_upgrade" data-id="${i.id}">↑ ${t("btn.update") || "Update"} ${escape(i.patchUpdate)}</button>` : ""}
         <button class="btn-mini danger" data-act="delete" data-id="${i.id}">${t("btn.delete")}</button>
       </div>
     `;
@@ -278,10 +295,105 @@ async function handleAction(act, id) {
       await navigator.clipboard.writeText(uri);
       toast(t("toast.copied"));
       return;
+    } else if (act === "install") {
+      handleInstall(id);
+      return;
+    } else if (act === "patch_upgrade") {
+      handlePatchUpgrade(id);
+      return;
     }
     await refresh();
   } catch (e) {
     toast(e.message || String(e), true);
+  }
+}
+
+async function handleInstall(id) {
+  const inst     = state.instances.find((x) => x.id === id);
+  const imodal   = document.getElementById("install-modal");
+  const title    = document.getElementById("install-modal-title");
+  const log      = document.getElementById("install-log");
+  const closeBtn = document.getElementById("install-close");
+  const spinner  = document.getElementById("install-spinner");
+
+  title.textContent = `Installing ${DB_LABELS[inst.type] || inst.type} ${inst.version}…`;
+  log.innerHTML     = "";
+  closeBtn.disabled = true;
+  spinner.style.display = "";
+  imodal.classList.remove("hidden");
+
+  const appendLine = (line) => {
+    const p = document.createElement("div");
+    p.className   = "log-line";
+    p.textContent = line;
+    log.appendChild(p);
+    log.scrollTop = log.scrollHeight;
+  };
+
+  const evKey = "install:progress:" + id;
+  if (window.runtime && window.runtime.EventsOn) {
+    window.runtime.EventsOn(evKey, appendLine);
+  }
+
+  try {
+    await api().InstallBinary(id);
+    spinner.style.display = "none";
+    title.textContent = `${DB_LABELS[inst.type] || inst.type} ${inst.version} installed`;
+    closeBtn.textContent = t("btn.close") || "Close";
+  } catch (e) {
+    spinner.style.display = "none";
+    appendLine("Error: " + (e.message || String(e)));
+  } finally {
+    closeBtn.disabled = false;
+    if (window.runtime && window.runtime.EventsOff) {
+      window.runtime.EventsOff(evKey);
+    }
+    await refresh();
+  }
+}
+
+async function handlePatchUpgrade(id) {
+  const inst     = state.instances.find((x) => x.id === id);
+  const imodal   = document.getElementById("install-modal");
+  const title    = document.getElementById("install-modal-title");
+  const log      = document.getElementById("install-log");
+  const closeBtn = document.getElementById("install-close");
+  const spinner  = document.getElementById("install-spinner");
+
+  const label = DB_LABELS[inst.type] || inst.type;
+  title.textContent = `Updating ${label} ${inst.version} → ${inst.patchUpdate}…`;
+  log.innerHTML     = "";
+  closeBtn.disabled = true;
+  spinner.style.display = "";
+  imodal.classList.remove("hidden");
+
+  const appendLine = (line) => {
+    const p = document.createElement("div");
+    p.className   = "log-line";
+    p.textContent = line;
+    log.appendChild(p);
+    log.scrollTop = log.scrollHeight;
+  };
+
+  const evKey = "install:progress:" + id;
+  if (window.runtime && window.runtime.EventsOn) {
+    window.runtime.EventsOn(evKey, appendLine);
+  }
+
+  try {
+    await api().UpgradePatch(id);
+    spinner.style.display = "none";
+    title.textContent = `${label} updated to ${inst.patchUpdate}`;
+    closeBtn.textContent = t("btn.close") || "Close";
+  } catch (e) {
+    spinner.style.display = "none";
+    appendLine("Error: " + (e.message || String(e)));
+  } finally {
+    closeBtn.disabled = false;
+    if (window.runtime && window.runtime.EventsOff) {
+      window.runtime.EventsOff(evKey);
+    }
+    await refresh();
   }
 }
 
@@ -348,6 +460,9 @@ const modal = document.getElementById("modal");
 document.getElementById("btn-new").addEventListener("click", openModal);
 document.getElementById("btn-empty-new").addEventListener("click", openModal);
 document.getElementById("m-cancel").addEventListener("click", closeModal);
+document.getElementById("install-close").addEventListener("click", () => {
+  document.getElementById("install-modal").classList.add("hidden");
+});
 document.getElementById("m-create").addEventListener("click", submitCreate);
 
 // DB type picker
@@ -378,13 +493,10 @@ async function updateVersionSelect() {
   const sel = document.getElementById("f-version");
   sel.innerHTML = "";
   const typeVersions = state.versions.filter((v) => v.type === state.selectedType);
-  const installed = typeVersions.filter((v) => v.installed);
-  const pool = installed.length ? installed : typeVersions;
-  pool.forEach((v) => {
+  typeVersions.forEach((v) => {
     const o    = document.createElement("option");
     o.value    = v.major;
     o.textContent = `${v.label}${v.installed ? "" : " (" + t("ver.not_installed") + ")"}`;
-    o.disabled = !v.installed;
     sel.appendChild(o);
   });
 }

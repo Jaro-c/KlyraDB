@@ -12,7 +12,7 @@ import (
 	"klyradb/internal/versions"
 )
 
-var mariadbFallback = []string{"11.4", "10.11", "10.6"}
+var mariadbFallback = []string{"12.2.2", "11.8.6", "10.11.16"}
 
 func mariadbMajors() []string { return versions.FetchLatest("mariadb", 3, mariadbFallback) }
 
@@ -38,10 +38,11 @@ func (e *MariaDBEngine) Versions() []engine.Version {
 	}
 
 	for _, m := range majors {
-		v := engine.Version{Type: engine.TypeMariaDB, Major: m, Label: "MariaDB " + m}
-		if installedVer != "" && strings.HasPrefix(installedVer, m) {
+		v := engine.Version{Type: engine.TypeMariaDB, Major: m, Label: "MariaDB " + m, LatestPatch: m}
+		if versions.MajorMatch(installedVer, m) {
 			v.Installed = true
 			v.BinPath = installedBin
+			v.InstalledVersion = installedVer
 		}
 		out = append(out, v)
 	}

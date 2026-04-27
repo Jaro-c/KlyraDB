@@ -12,7 +12,7 @@ import (
 	"klyradb/internal/versions"
 )
 
-var mongoFallback = []string{"8.0", "7.0", "6.0"}
+var mongoFallback = []string{"8.2.6", "7.3.4", "6.3.2"}
 
 func mongoMajors() []string { return versions.FetchLatest("mongodb", 3, mongoFallback) }
 
@@ -35,10 +35,11 @@ func (e *MongoEngine) Versions() []engine.Version {
 	}
 
 	for _, m := range majors {
-		v := engine.Version{Type: engine.TypeMongoDB, Major: m, Label: "MongoDB " + m}
-		if installedVer != "" && (installedVer == m || strings.HasPrefix(installedVer, m+".")) {
+		v := engine.Version{Type: engine.TypeMongoDB, Major: m, Label: "MongoDB " + m, LatestPatch: m}
+		if versions.MajorMatch(installedVer, m) {
 			v.Installed = true
 			v.BinPath = installedBin
+			v.InstalledVersion = installedVer
 		}
 		out = append(out, v)
 	}
@@ -162,12 +163,7 @@ func detectVersion(bin string) string {
 	for _, line := range strings.Split(string(out), "\n") {
 		line = strings.TrimSpace(line)
 		if strings.HasPrefix(line, "db version v") {
-			ver := strings.TrimPrefix(line, "db version v")
-			parts := strings.Split(ver, ".")
-			if len(parts) >= 2 {
-				return parts[0] + "." + parts[1]
-			}
-			return ver
+			return strings.TrimPrefix(line, "db version v")
 		}
 	}
 	return ""

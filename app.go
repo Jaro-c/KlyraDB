@@ -8,6 +8,8 @@ import (
 	"klyradb/internal/i18n"
 	"klyradb/internal/manager"
 	"klyradb/internal/store"
+
+	wailsRuntime "github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 type App struct {
@@ -69,6 +71,22 @@ func (a *App) DeleteInstance(id string) error {
 
 func (a *App) InstanceStatus(id string) (engine.Status, error) {
 	return a.manager.Status(id)
+}
+
+// InstallBinary installs the DB binary for the given instance, streaming
+// progress lines as "install:progress:<id>" events to the frontend.
+func (a *App) InstallBinary(id string) error {
+	return a.manager.Install(id, func(line string) {
+		wailsRuntime.EventsEmit(a.ctx, "install:progress:"+id, line)
+	})
+}
+
+// UpgradePatch stops all running instances of the same type+major, upgrades
+// the binary, then restarts them. Streams progress as "install:progress:<id>" events.
+func (a *App) UpgradePatch(id string) error {
+	return a.manager.UpgradePatch(id, func(line string) {
+		wailsRuntime.EventsEmit(a.ctx, "install:progress:"+id, line)
+	})
 }
 
 // SuggestPort returns a free port for the given DB type.

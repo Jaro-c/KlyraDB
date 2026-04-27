@@ -12,7 +12,7 @@ import (
 	"klyradb/internal/versions"
 )
 
-var mysqlFallback = []string{"9.3", "8.4", "8.0"}
+var mysqlFallback = []string{"9.7.0", "8.4.9", "5.7.44"}
 
 func mysqlMajors() []string { return versions.FetchLatest("mysql", 3, mysqlFallback) }
 
@@ -39,10 +39,11 @@ func (e *MySQLEngine) Versions() []engine.Version {
 	}
 
 	for _, m := range majors {
-		v := engine.Version{Type: engine.TypeMySQL, Major: m, Label: "MySQL " + m}
-		if installedVer != "" && strings.HasPrefix(installedVer, m) {
+		v := engine.Version{Type: engine.TypeMySQL, Major: m, Label: "MySQL " + m, LatestPatch: m}
+		if versions.MajorMatch(installedVer, m) {
 			v.Installed = true
 			v.BinPath = installedBin
+			v.InstalledVersion = installedVer
 		}
 		out = append(out, v)
 	}

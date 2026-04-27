@@ -1,13 +1,16 @@
 package manager
 
 import (
+	"bufio"
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"os"
+	"os/exec"
 	"os/user"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"sync"
 	"time"
@@ -103,9 +106,28 @@ func (m *Manager) Instances() []engine.Instance {
 	for _, i := range m.instances {
 		inst := *i
 		inst.UpgradeVersion = m.latestAvailable(inst.Type, inst.Version)
+		inst.PatchUpdate = m.latestPatch(inst.Type, inst.Version)
 		out = append(out, inst)
 	}
 	return out
+}
+
+// latestPatch returns the API's latest patch version for the same major if it
+// differs from the currently installed binary version, else "".
+func (m *Manager) latestPatch(t engine.DBType, major string) string {
+	eng, ok := m.engines[t]
+	if !ok {
+		return ""
+	}
+	for _, v := range eng.Versions() {
+		if v.Major == major {
+			if v.InstalledVersion != "" && v.LatestPatch != "" && v.InstalledVersion != v.LatestPatch {
+				return v.LatestPatch
+			}
+			return ""
+		}
+	}
+	return ""
 }
 
 // latestAvailable returns the highest installed version newer than currentVersion
@@ -180,6 +202,23 @@ func (m *Manager) Create(name, dbType, version string, port int) (engine.Instanc
 		CreatedAt: time.Now(),
 	}
 
+	// Check if binary is installed; if not, save instance for deferred install.
+	binInstalled := false
+	for _, v := range eng.Versions() {
+		if v.Major == version && v.Installed {
+			binInstalled = true
+			break
+		}
+	}
+	if !binInstalled {
+		inst.Status = engine.StatusNeedsInstall
+		m.mu.Lock()
+		m.instances[id] = &inst
+		m.mu.Unlock()
+		m.persist()
+		return inst, nil
+	}
+
 	if err := eng.Create(&inst); err != nil {
 		inst.Status = engine.StatusError
 		inst.LastError = err.Error()
@@ -192,6 +231,235 @@ func (m *Manager) Create(name, dbType, version string, port int) (engine.Instanc
 	m.mu.Unlock()
 	m.persist()
 	return inst, nil
+}
+
+// Install downloads/installs the DB binary for inst, streams output via progress,
+// then initializes the data directory.
+func (m *Manager) Install(id string, progress func(string)) error {
+	m.mu.RLock()
+	inst, ok := m.instances[id]
+	m.mu.RUnlock()
+	if !ok {
+		return fmt.Errorf("instance %s not found", id)
+	}
+
+	if engine.SnapDir() != "" {
+		return fmt.Errorf("%s is not bundled in the snap package", inst.Type)
+	}
+
+	cmd := installCmd(inst.Type, inst.Version)
+	if len(cmd) == 0 {
+		return fmt.Errorf("automatic install not supported for %s on this OS", inst.Type)
+	}
+
+	m.setStatus(id, engine.StatusInstalling, "")
+	progress("Installing " + string(inst.Type) + " " + inst.Version + "…")
+
+	c := exec.Command(cmd[0], cmd[1:]...) //nolint:gosec
+	stdout, _ := c.StdoutPipe()
+	stderr, _ := c.StderrPipe()
+
+	if err := c.Start(); err != nil {
+		m.setStatus(id, engine.StatusNeedsInstall, err.Error())
+		return fmt.Errorf("install failed to start: %w", err)
+	}
+
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		sc := bufio.NewScanner(stdout)
+		for sc.Scan() {
+			progress(sc.Text())
+		}
+	}()
+	scErr := bufio.NewScanner(stderr)
+	for scErr.Scan() {
+		progress("! " + scErr.Text())
+	}
+	<-done
+
+	if err := c.Wait(); err != nil {
+		m.setStatus(id, engine.StatusNeedsInstall, err.Error())
+		return fmt.Errorf("install failed: %w", err)
+	}
+
+	progress("Binary installed. Initializing database…")
+
+	eng := m.engines[inst.Type]
+	if err := eng.Create(inst); err != nil {
+		m.setStatus(id, engine.StatusError, err.Error())
+		return err
+	}
+
+	m.setStatus(id, engine.StatusStopped, "")
+	progress("Done.")
+	return nil
+}
+
+// UpgradePatch stops all running instances of the same type+major, runs the
+// OS package upgrade, then restarts the instances that were running before.
+func (m *Manager) UpgradePatch(id string, progress func(string)) error {
+	m.mu.RLock()
+	inst, ok := m.instances[id]
+	m.mu.RUnlock()
+	if !ok {
+		return fmt.Errorf("instance %s not found", id)
+	}
+
+	if engine.SnapDir() != "" {
+		return fmt.Errorf("%s patch upgrade is not supported in the snap package", inst.Type)
+	}
+
+	cmd := upgradeCmd(inst.Type, inst.Version)
+	if len(cmd) == 0 {
+		return fmt.Errorf("automatic upgrade not supported for %s on this OS", inst.Type)
+	}
+
+	// Collect running siblings (same type + major).
+	m.mu.RLock()
+	var wasRunning []string
+	for iid, i := range m.instances {
+		if i.Type == inst.Type && i.Version == inst.Version && i.Status == engine.StatusRunning {
+			wasRunning = append(wasRunning, iid)
+		}
+	}
+	m.mu.RUnlock()
+
+	for _, iid := range wasRunning {
+		m.mu.RLock()
+		name := m.instances[iid].Name
+		m.mu.RUnlock()
+		progress("Stopping " + name + "…")
+		if err := m.Stop(iid); err != nil {
+			progress("! " + err.Error())
+		}
+	}
+
+	progress("Upgrading " + string(inst.Type) + " " + inst.Version + "…")
+
+	c := exec.Command(cmd[0], cmd[1:]...) //nolint:gosec
+	stdout, _ := c.StdoutPipe()
+	stderr, _ := c.StderrPipe()
+
+	if err := c.Start(); err != nil {
+		for _, iid := range wasRunning {
+			_ = m.Start(iid)
+		}
+		return fmt.Errorf("upgrade failed to start: %w", err)
+	}
+
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		sc := bufio.NewScanner(stdout)
+		for sc.Scan() {
+			progress(sc.Text())
+		}
+	}()
+	scErr := bufio.NewScanner(stderr)
+	for scErr.Scan() {
+		progress("! " + scErr.Text())
+	}
+	<-done
+
+	if err := c.Wait(); err != nil {
+		for _, iid := range wasRunning {
+			_ = m.Start(iid)
+		}
+		return fmt.Errorf("upgrade failed: %w", err)
+	}
+
+	progress("Binary upgraded. Restarting instances…")
+	for _, iid := range wasRunning {
+		m.mu.RLock()
+		name := m.instances[iid].Name
+		m.mu.RUnlock()
+		progress("Starting " + name + "…")
+		if err := m.Start(iid); err != nil {
+			progress("! Failed to start " + name + ": " + err.Error())
+		}
+	}
+	progress("Done.")
+	return nil
+}
+
+func upgradeCmd(t engine.DBType, version string) []string {
+	switch runtime.GOOS {
+	case "linux":
+		pkg := linuxPackage(t, version)
+		if pkg == "" {
+			return nil
+		}
+		return []string{"pkexec", "apt-get", "install", "-y", "--only-upgrade", pkg}
+	case "darwin":
+		pkg := brewPackage(t, version)
+		if pkg == "" {
+			return nil
+		}
+		return []string{"brew", "upgrade", pkg}
+	}
+	return nil
+}
+
+func (m *Manager) setStatus(id string, s engine.Status, lastErr string) {
+	m.mu.Lock()
+	if inst, ok := m.instances[id]; ok {
+		inst.Status = s
+		inst.LastError = lastErr
+	}
+	m.mu.Unlock()
+	m.persist()
+}
+
+// installCmd returns the OS-appropriate command to install a DB binary.
+func installCmd(t engine.DBType, version string) []string {
+	switch runtime.GOOS {
+	case "linux":
+		pkg := linuxPackage(t, version)
+		if pkg == "" {
+			return nil
+		}
+		return []string{"pkexec", "apt-get", "install", "-y", pkg}
+	case "darwin":
+		pkg := brewPackage(t, version)
+		if pkg == "" {
+			return nil
+		}
+		return []string{"brew", "install", pkg}
+	}
+	return nil
+}
+
+func linuxPackage(t engine.DBType, version string) string {
+	switch t {
+	case engine.TypePostgres:
+		return "postgresql-" + version
+	case engine.TypeMySQL:
+		return "mysql-server"
+	case engine.TypeMariaDB:
+		return "mariadb-server"
+	case engine.TypeRedis:
+		return "redis-server"
+	case engine.TypeMongoDB:
+		return "mongodb"
+	}
+	return ""
+}
+
+func brewPackage(t engine.DBType, version string) string {
+	switch t {
+	case engine.TypePostgres:
+		return "postgresql@" + version
+	case engine.TypeMySQL:
+		return "mysql"
+	case engine.TypeMariaDB:
+		return "mariadb"
+	case engine.TypeRedis:
+		return "redis"
+	case engine.TypeMongoDB:
+		return "mongodb-community"
+	}
+	return ""
 }
 
 func (m *Manager) Start(id string) error {

@@ -30,6 +30,11 @@ plugs:
   network:
   network-bind:
   system-observe:
+  desktop:
+  desktop-legacy:
+  x11:
+  wayland:
+  opengl:
 
 apps:
   klyradb:
@@ -39,9 +44,17 @@ apps:
       - network
       - network-bind
       - system-observe
+      - desktop
+      - desktop-legacy
+      - x11
+      - wayland
+      - opengl
     environment:
       LD_LIBRARY_PATH: "$SNAP/usr/lib/$SNAP_ARCH-linux-gnu:$SNAP/usr/lib:$SNAP/opt/klyra-mysql/lib:$SNAP/opt/klyra-mariadb/lib:$LD_LIBRARY_PATH"
       PATH: "$SNAP/opt/klyra-mysql/sbin:$SNAP/opt/klyra-mysql/bin:$SNAP/opt/klyra-mariadb/sbin:$SNAP/opt/klyra-mariadb/bin:$SNAP/usr/lib/postgresql/18/bin:$SNAP/usr/lib/postgresql/17/bin:$SNAP/usr/lib/postgresql/16/bin:$SNAP/usr/sbin:$SNAP/usr/bin:$PATH"
+      DISPLAY: "${DISPLAY}"
+      WAYLAND_DISPLAY: "${WAYLAND_DISPLAY}"
+      XDG_RUNTIME_DIR: "${XDG_RUNTIME_DIR}"
 
 parts:
   klyradb:

@@ -1,0 +1,25 @@
+linters:
+  enable:
+    - staticcheck
+    - gosimple
+    - ineffassign
+    - unused
+    - govet
+    - errcheck
+    - misspell
+    - gosec
+    - bodyclose
+    - noctx
+
+linters-settings:
+  gosec:
+    excludes:
+      - G204  # subprocess launched with variable — intentional (we exec DB binaries)
+      - G304  # file inclusion via variable — intentional (user-supplied paths)
+
+issues:
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - errcheck
+        - gosec

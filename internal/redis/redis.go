@@ -12,7 +12,7 @@ import (
 	"klyradb/internal/versions"
 )
 
-var redisFallback = []string{"8.0", "7.4", "7.2"}
+var redisFallback = []string{"8.6.2", "7.4.8", "6.2.21"}
 
 func redisMajors() []string { return versions.FetchLatest("redis", 3, redisFallback) }
 
@@ -35,10 +35,11 @@ func (e *RedisEngine) Versions() []engine.Version {
 	}
 
 	for _, m := range majors {
-		v := engine.Version{Type: engine.TypeRedis, Major: m, Label: "Redis " + m}
-		if installedVer != "" && strings.HasPrefix(installedVer, m) {
+		v := engine.Version{Type: engine.TypeRedis, Major: m, Label: "Redis " + m, LatestPatch: m}
+		if versions.MajorMatch(installedVer, m) {
 			v.Installed = true
 			v.BinPath = installedBin
+			v.InstalledVersion = installedVer
 		}
 		out = append(out, v)
 	}
