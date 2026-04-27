@@ -198,3 +198,50 @@ func TestLoadAll_roundtrip(t *testing.T) {
 		t.Errorf("expected name pg1, got %s", list[0].Name)
 	}
 }
+
+func TestListVersions_allEngines(t *testing.T) {
+	m := newTestManager(t)
+	versions := m.ListVersions()
+	if len(versions) == 0 {
+		t.Error("expected versions from all engines")
+	}
+	// 4 engines × 3 versions each = 12
+	if len(versions) != 12 {
+		t.Errorf("expected 12 versions (4 engines × 3), got %d", len(versions))
+	}
+}
+
+func TestInstances_upgradeVersionPopulated(t *testing.T) {
+	m := newTestManager(t)
+	if _, err := m.Create("pg1", "postgres", "14", 0); err != nil {
+		t.Fatalf("Create: %v", err)
+	}
+	list := m.Instances()
+	if len(list) != 1 {
+		t.Fatalf("expected 1 instance, got %d", len(list))
+	}
+	if list[0].UpgradeVersion != "16" {
+		t.Errorf("expected upgrade to 16, got %q", list[0].UpgradeVersion)
+	}
+}
+
+func TestStopAll_onlyStopsRunning(t *testing.T) {
+	m := newTestManager(t)
+	inst, err := m.Create("pg1", "postgres", "15", 0)
+	if err != nil {
+		t.Fatalf("Create: %v", err)
+	}
+	// mark as running manually
+	m.mu.Lock()
+	m.instances[inst.ID].Status = engine.StatusRunning
+	m.mu.Unlock()
+
+	m.StopAll()
+
+	m.mu.RLock()
+	status := m.instances[inst.ID].Status
+	m.mu.RUnlock()
+	if status != engine.StatusStopped {
+		t.Errorf("expected stopped after StopAll, got %s", status)
+	}
+}
