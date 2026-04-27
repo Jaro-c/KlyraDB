@@ -26,6 +26,7 @@
   --c-mysql:       #ff7d2a;
   --c-mariadb:     #d47028;
   --c-redis:       #ff4040;
+  --c-mongodb:     #47a248;
   --pulse-glow:    rgba(0,229,160,.6);
 }
 
@@ -50,6 +51,7 @@ html[data-theme="light"] {
   --c-mysql:       #c84e00;
   --c-mariadb:     #995010;
   --c-redis:       #c02020;
+  --c-mongodb:     #2d7a31;
 }
 
 /* ---------- Reset ---------- */
@@ -200,6 +202,7 @@ html[data-theme="light"]       { --nav-active-bg: rgba(0,163,116,.12); }
 .db-icon.mysql    { color: var(--c-mysql); }
 .db-icon.mariadb  { color: var(--c-mariadb); }
 .db-icon.redis    { color: var(--c-redis); }
+.db-icon.mongodb  { color: var(--c-mongodb); }
 
 .db-badge {
   display: inline-flex; align-items: center; gap: 4px;
@@ -212,10 +215,12 @@ html[data-theme="light"]       { --nav-active-bg: rgba(0,163,116,.12); }
 .db-badge.mysql    { background: rgba(255,125,42,.14);  color: var(--c-mysql); }
 .db-badge.mariadb  { background: rgba(212,112,40,.14);  color: var(--c-mariadb); }
 .db-badge.redis    { background: rgba(255,64,64,.14);   color: var(--c-redis); }
+.db-badge.mongodb  { background: rgba(71,162,72,.14);   color: var(--c-mongodb); }
 html[data-theme="light"] .db-badge.postgres { background: rgba(26,114,212,.10); }
 html[data-theme="light"] .db-badge.mysql    { background: rgba(200,78,0,.10);   }
 html[data-theme="light"] .db-badge.mariadb  { background: rgba(153,80,16,.10);  }
 html[data-theme="light"] .db-badge.redis    { background: rgba(192,32,32,.10);  }
+html[data-theme="light"] .db-badge.mongodb  { background: rgba(45,122,49,.10);  }
 
 /* ---------- Filter bar ---------- */
 .filter-bar { display: flex; gap: 4px; margin-bottom: 18px; flex-wrap: wrap; }
@@ -291,15 +296,18 @@ html[data-theme="light"]       { --btn-primary-fg: #ffffff; }
 .card[data-type="mysql"]    { border-left-color: var(--c-mysql); }
 .card[data-type="mariadb"]  { border-left-color: var(--c-mariadb); }
 .card[data-type="redis"]    { border-left-color: var(--c-redis); }
+.card[data-type="mongodb"]  { border-left-color: var(--c-mongodb); }
 
 .card.running[data-type="postgres"] { box-shadow: -3px 0 18px -1px rgba(77,157,245,.35); }
 .card.running[data-type="mysql"]    { box-shadow: -3px 0 18px -1px rgba(255,125,42,.35); }
 .card.running[data-type="mariadb"]  { box-shadow: -3px 0 18px -1px rgba(212,112,40,.35); }
 .card.running[data-type="redis"]    { box-shadow: -3px 0 18px -1px rgba(255,64,64,.35); }
+.card.running[data-type="mongodb"]  { box-shadow: -3px 0 18px -1px rgba(71,162,72,.35); }
 html[data-theme="light"] .card.running[data-type="postgres"] { box-shadow: -3px 0 16px -1px rgba(26,114,212,.30); }
 html[data-theme="light"] .card.running[data-type="mysql"]    { box-shadow: -3px 0 16px -1px rgba(200,78,0,.30); }
 html[data-theme="light"] .card.running[data-type="mariadb"]  { box-shadow: -3px 0 16px -1px rgba(153,80,16,.30); }
 html[data-theme="light"] .card.running[data-type="redis"]    { box-shadow: -3px 0 16px -1px rgba(192,32,32,.30); }
+html[data-theme="light"] .card.running[data-type="mongodb"]  { box-shadow: -3px 0 16px -1px rgba(45,122,49,.30); }
 
 /* Scan line on running cards */
 .card.running::after {
@@ -424,6 +432,7 @@ html[data-theme="light"] .card.running[data-type="redis"]    { box-shadow: -3px 
 .version-card .major.mysql    { color: var(--c-mysql); }
 .version-card .major.mariadb  { color: var(--c-mariadb); }
 .version-card .major.redis    { color: var(--c-redis); }
+.version-card .major.mongodb  { color: var(--c-mongodb); }
 .version-card .status-ok      { color: var(--accent); font-size: 11px; font-family: var(--mono); }
 .version-card .status-missing { color: var(--text-mute); font-size: 11px; font-family: var(--mono); }
 .version-card code {

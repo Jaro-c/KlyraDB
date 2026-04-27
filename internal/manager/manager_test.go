@@ -43,6 +43,7 @@ func newTestManager(t *testing.T) *Manager {
 			engine.TypeMySQL:    &mockEngine{dbType: engine.TypeMySQL},
 			engine.TypeMariaDB:  &mockEngine{dbType: engine.TypeMariaDB},
 			engine.TypeRedis:    &mockEngine{dbType: engine.TypeRedis},
+			engine.TypeMongoDB:  &mockEngine{dbType: engine.TypeMongoDB},
 		},
 		store:   s,
 		baseDir: dir,
@@ -51,7 +52,7 @@ func newTestManager(t *testing.T) *Manager {
 
 func TestNextFreePort_isFree(t *testing.T) {
 	m := newTestManager(t)
-	for _, dbType := range []engine.DBType{engine.TypePostgres, engine.TypeMySQL, engine.TypeMariaDB, engine.TypeRedis} {
+	for _, dbType := range []engine.DBType{engine.TypePostgres, engine.TypeMySQL, engine.TypeMariaDB, engine.TypeRedis, engine.TypeMongoDB} {
 		p := m.NextFreePort(dbType)
 		if !engine.PortFree(p) {
 			t.Errorf("%s: NextFreePort returned %d which is not free", dbType, p)
@@ -205,9 +206,9 @@ func TestListVersions_allEngines(t *testing.T) {
 	if len(versions) == 0 {
 		t.Error("expected versions from all engines")
 	}
-	// 4 engines × 3 versions each = 12
-	if len(versions) != 12 {
-		t.Errorf("expected 12 versions (4 engines × 3), got %d", len(versions))
+	// 5 engines × 3 versions each = 15
+	if len(versions) != 15 {
+		t.Errorf("expected 15 versions (5 engines × 3), got %d", len(versions))
 	}
 }
 

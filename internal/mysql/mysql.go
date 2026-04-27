@@ -9,11 +9,12 @@ import (
 	"time"
 
 	"klyradb/internal/engine"
+	"klyradb/internal/versions"
 )
 
-// supportedMajors — MySQL versions with active support as of 2026-04.
-// 8.4 is LTS (active until 2032). 8.0 EOL late 2026, included for compatibility.
-var supportedMajors = []string{"8.4", "8.0"}
+var mysqlFallback = []string{"9.3", "8.4", "8.0"}
+
+func mysqlMajors() []string { return versions.FetchLatest("mysql", 3, mysqlFallback) }
 
 type MySQLEngine struct{}
 
@@ -23,7 +24,8 @@ func (e *MySQLEngine) DBType() engine.DBType { return engine.TypeMySQL }
 
 func (e *MySQLEngine) Versions() []engine.Version {
 	mysqld := findBinary("mysqld")
-	out := make([]engine.Version, 0, len(supportedMajors))
+	majors := mysqlMajors()
+	out := make([]engine.Version, 0, len(majors))
 
 	installedVer := ""
 	installedBin := ""
@@ -36,7 +38,7 @@ func (e *MySQLEngine) Versions() []engine.Version {
 		}
 	}
 
-	for _, m := range supportedMajors {
+	for _, m := range majors {
 		v := engine.Version{Type: engine.TypeMySQL, Major: m, Label: "MySQL " + m}
 		if installedVer != "" && strings.HasPrefix(installedVer, m) {
 			v.Installed = true

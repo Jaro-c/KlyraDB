@@ -9,11 +9,12 @@ import (
 	"time"
 
 	"klyradb/internal/engine"
+	"klyradb/internal/versions"
 )
 
-// supportedMajors — PG versions with active support as of 2026-04.
-// PG 15 EOL 2027-11, dropped to keep list short. PG 18 latest stable.
-var supportedMajors = []string{"18", "17", "16"}
+var pgFallback = []string{"18", "17", "16"}
+
+func pgMajors() []string { return versions.FetchLatest("postgresql", 3, pgFallback) }
 
 type PGEngine struct{}
 
@@ -50,8 +51,9 @@ func (e *PGEngine) Versions() []engine.Version {
 			}
 		}
 	}
-	out := make([]engine.Version, 0, len(supportedMajors))
-	for _, m := range supportedMajors {
+	majors := pgMajors()
+	out := make([]engine.Version, 0, len(majors))
+	for _, m := range majors {
 		v := engine.Version{Type: engine.TypePostgres, Major: m, Label: "PostgreSQL " + m}
 		if bin, ok := found[m]; ok {
 			v.BinPath = bin

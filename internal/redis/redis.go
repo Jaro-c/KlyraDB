@@ -9,11 +9,12 @@ import (
 	"time"
 
 	"klyradb/internal/engine"
+	"klyradb/internal/versions"
 )
 
-// supportedMajors — Redis versions detected/bundled.
-// 6.x is bundled in snap (Ubuntu 22.04 package). 7.x detected from host.
-var supportedMajors = []string{"7.4", "7.2", "6.0"}
+var redisFallback = []string{"8.0", "7.4", "7.2"}
+
+func redisMajors() []string { return versions.FetchLatest("redis", 3, redisFallback) }
 
 type RedisEngine struct{}
 
@@ -23,7 +24,8 @@ func (e *RedisEngine) DBType() engine.DBType { return engine.TypeRedis }
 
 func (e *RedisEngine) Versions() []engine.Version {
 	bin := findBinary("redis-server")
-	out := make([]engine.Version, 0, len(supportedMajors))
+	majors := redisMajors()
+	out := make([]engine.Version, 0, len(majors))
 
 	installedVer := ""
 	installedBin := ""
@@ -32,7 +34,7 @@ func (e *RedisEngine) Versions() []engine.Version {
 		installedBin = filepath.Dir(bin)
 	}
 
-	for _, m := range supportedMajors {
+	for _, m := range majors {
 		v := engine.Version{Type: engine.TypeRedis, Major: m, Label: "Redis " + m}
 		if installedVer != "" && strings.HasPrefix(installedVer, m) {
 			v.Installed = true

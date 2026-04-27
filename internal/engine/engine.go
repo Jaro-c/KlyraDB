@@ -47,6 +47,7 @@ const (
 	TypeMySQL    DBType = "mysql"
 	TypeMariaDB  DBType = "mariadb"
 	TypeRedis    DBType = "redis"
+	TypeMongoDB  DBType = "mongodb"
 )
 
 type Status string

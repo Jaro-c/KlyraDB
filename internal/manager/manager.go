@@ -14,6 +14,7 @@ import (
 
 	"klyradb/internal/engine"
 	"klyradb/internal/mariadb"
+	"klyradb/internal/mongodb"
 	"klyradb/internal/mysql"
 	"klyradb/internal/pg"
 	"klyradb/internal/redis"
@@ -26,6 +27,7 @@ var defaultPorts = map[engine.DBType]int{
 	engine.TypeMySQL:    3306,
 	engine.TypeMariaDB:  3316, // offset to avoid collision if MySQL also installed
 	engine.TypeRedis:    6379,
+	engine.TypeMongoDB:  27017,
 }
 
 // confExtensions maps DB types to config file extensions.
@@ -33,6 +35,7 @@ var confExtensions = map[engine.DBType]string{
 	engine.TypeMySQL:   ".cnf",
 	engine.TypeMariaDB: ".cnf",
 	engine.TypeRedis:   ".conf",
+	engine.TypeMongoDB: ".yml",
 }
 
 type Manager struct {
@@ -55,6 +58,7 @@ func New(s *store.Store) *Manager {
 			engine.TypeMySQL:    mysql.New(),
 			engine.TypeMariaDB:  mariadb.New(),
 			engine.TypeRedis:    redis.New(),
+			engine.TypeMongoDB:  mongodb.New(),
 		},
 		store:   s,
 		baseDir: baseDir,

@@ -9,11 +9,12 @@ import (
 	"time"
 
 	"klyradb/internal/engine"
+	"klyradb/internal/versions"
 )
 
-// supportedMajors — MariaDB LTS versions with active support as of 2026-04.
-// 11.4 LTS until May 2029. 10.11 LTS until Feb 2028. 10.6 LTS until Jul 2026.
-var supportedMajors = []string{"11.4", "10.11", "10.6"}
+var mariadbFallback = []string{"11.4", "10.11", "10.6"}
+
+func mariadbMajors() []string { return versions.FetchLatest("mariadb", 3, mariadbFallback) }
 
 type MariaDBEngine struct{}
 
@@ -23,7 +24,8 @@ func (e *MariaDBEngine) DBType() engine.DBType { return engine.TypeMariaDB }
 
 func (e *MariaDBEngine) Versions() []engine.Version {
 	bin := findMariaDBd()
-	out := make([]engine.Version, 0, len(supportedMajors))
+	majors := mariadbMajors()
+	out := make([]engine.Version, 0, len(majors))
 
 	installedVer := ""
 	installedBin := ""
@@ -35,7 +37,7 @@ func (e *MariaDBEngine) Versions() []engine.Version {
 		}
 	}
 
-	for _, m := range supportedMajors {
+	for _, m := range majors {
 		v := engine.Version{Type: engine.TypeMariaDB, Major: m, Label: "MariaDB " + m}
 		if installedVer != "" && strings.HasPrefix(installedVer, m) {
 			v.Installed = true
