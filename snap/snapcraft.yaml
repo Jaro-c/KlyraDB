@@ -55,7 +55,7 @@ parts:
       - npm
       - curl
     override-build: |
-      curl -fsSL https://go.dev/dl/go1.26.1.linux-amd64.tar.gz | tar -C /usr/local -xz
+      curl -fsSL https://go.dev/dl/go1.26.2.linux-amd64.tar.gz | tar -C /usr/local -xz
       export PATH="/usr/local/go/bin:$HOME/go/bin:$PATH"
       GOFLAGS="-mod=mod" go install github.com/wailsapp/wails/v2/cmd/wails@v2.9.2
       go clean -cache
