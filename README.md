@@ -74,7 +74,11 @@ Version lists are fetched live from [endoflife.date](https://endoflife.date) at 
 
 ### 🔼 Stay up to date
 
-KlyraDB detects when a newer major version is available for a running instance and shows an upgrade prompt — so you never fall behind without realizing it.
+KlyraDB detects when a **patch update** is available for an installed engine (e.g. `18.2.1 → 18.2.2`) and shows a badge on the instance card. One click stops all affected instances, runs the system upgrade (`apt` / `brew`), and restarts them automatically.
+
+### 📦 Install engines on demand
+
+Outside the Snap, engine binaries may not be present yet. KlyraDB shows an **Install** button in that case — clicking it streams live `apt` / `brew` progress directly in the UI, no terminal needed. The instance starts automatically once the install finishes.
 
 ### 🌍 Built for everyone
 
