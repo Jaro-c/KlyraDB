@@ -7,11 +7,7 @@ description: |
   KlyraDB manages isolated PostgreSQL, MySQL, MariaDB and Redis instances.
   No Docker. No config files. Just click and run.
 
-  Bundled engines (no host installation required):
-    PostgreSQL: 16, 17, 18
-    MySQL: 8.0
-    MariaDB: 10.6
-    Redis: 6.x
+  Engines are downloaded and installed on demand — only install what you need.
 
 license: Apache-2.0
 contact: https://github.com/Jaro-c/KlyraDB/issues
@@ -27,13 +23,6 @@ compression: lzo
 architectures:
   - build-on: amd64
 
-package-repositories:
-  - type: apt
-    key-id: B97B0AFCAA1A47F044F244A07FCC7D46ACCC4CF8
-    url: https://apt.postgresql.org/pub/repos/apt
-    suites: [jammy-pgdg]
-    components: [main]
-
 apps:
   klyradb:
     command: bin/klyradb
@@ -48,8 +37,6 @@ apps:
       - wayland
       - opengl
     environment:
-      LD_LIBRARY_PATH: "$SNAP/usr/lib/$SNAP_ARCH-linux-gnu:$SNAP/usr/lib:$SNAP/opt/klyra-mysql/lib:$SNAP/opt/klyra-mariadb/lib:$LD_LIBRARY_PATH"
-      PATH: "$SNAP/opt/klyra-mysql/sbin:$SNAP/opt/klyra-mysql/bin:$SNAP/opt/klyra-mariadb/sbin:$SNAP/opt/klyra-mariadb/bin:$SNAP/usr/lib/postgresql/18/bin:$SNAP/usr/lib/postgresql/17/bin:$SNAP/usr/lib/postgresql/16/bin:$SNAP/usr/sbin:$SNAP/usr/bin:$PATH"
       DISPLAY: "${DISPLAY}"
       WAYLAND_DISPLAY: "${WAYLAND_DISPLAY}"
       XDG_RUNTIME_DIR: "${XDG_RUNTIME_DIR}"
@@ -80,99 +67,3 @@ parts:
     stage-packages:
       - libwebkit2gtk-4.1-0
       - libgtk-3-0
-      - postgresql-16
-      - postgresql-17
-      - postgresql-18
-      - postgresql-common
-      - postgresql-client-common
-      - redis-server
-      - redis-tools
-    prime:
-      - -usr/lib/x86_64-linux-gnu/caca/
-      - -usr/lib/x86_64-linux-gnu/libcaca++*
-      - -usr/lib/x86_64-linux-gnu/libcolordprivate*
-      - -usr/lib/x86_64-linux-gnu/libdconf*
-      - -usr/lib/x86_64-linux-gnu/libEGL_mesa*
-      - -usr/lib/x86_64-linux-gnu/libexslt*
-      - -usr/lib/x86_64-linux-gnu/libGLESv2*
-      - -usr/lib/x86_64-linux-gnu/libGLX_mesa*
-      - -usr/lib/x86_64-linux-gnu/libgstcheck*
-      - -usr/lib/x86_64-linux-gnu/libgstcontroller*
-      - -usr/lib/x86_64-linux-gnu/libicuio*
-      - -usr/lib/x86_64-linux-gnu/libicutest*
-      - -usr/lib/x86_64-linux-gnu/libjacknet*
-      - -usr/lib/x86_64-linux-gnu/libjackserver*
-      - -usr/lib/x86_64-linux-gnu/liblua5.1-c++*
-      - -usr/lib/x86_64-linux-gnu/liblua5.2-bitop*
-      - -usr/lib/x86_64-linux-gnu/liblua5.2-cjson*
-      - -usr/lib/x86_64-linux-gnu/liborc-test*
-      - -usr/lib/x86_64-linux-gnu/libpulse-simple*
-      - -usr/lib/x86_64-linux-gnu/libsoup-2.4*
-      - -usr/lib/x86_64-linux-gnu/libunwind-coredump*
-      - -usr/lib/x86_64-linux-gnu/libunwind-ptrace*
-      - -usr/lib/x86_64-linux-gnu/libunwind-x86_64*
-      - -usr/lib/x86_64-linux-gnu/libwoff2enc*
-
-  # MySQL 8.0 extracted to /opt/klyra-mysql/ to avoid file conflicts with MariaDB.
-  # Both packages ship /usr/sbin/mysqld, /usr/lib/mysql/plugin/, /usr/share/mysql/ etc.
-  mysql-bundled:
-    plugin: nil
-    stage-packages:
-      - mysql-server-8.0
-      - libaio1
-      - libevent-core-2.1-7
-      - libevent-pthreads-2.1-7
-      - libprotobuf-lite23
-      - libmecab2
-    override-build: |
-      PREFIX="$SNAPCRAFT_PART_INSTALL/opt/klyra-mysql"
-      SRC="$SNAPCRAFT_PART_INSTALL"
-      mkdir -p "$PREFIX/sbin" "$PREFIX/bin" "$PREFIX/lib" "$PREFIX/share"
-
-      for f in mysqld mysqld_safe; do
-        [ -f "$SRC/usr/sbin/$f" ] && mv "$SRC/usr/sbin/$f" "$PREFIX/sbin/"
-      done
-      for f in mysql mysqladmin mysqlcheck mysqldump mysql_upgrade mysql_ssl_rsa_setup; do
-        [ -f "$SRC/usr/bin/$f" ] && mv "$SRC/usr/bin/$f" "$PREFIX/bin/"
-      done
-      [ -d "$SRC/usr/lib/mysql" ]       && mv "$SRC/usr/lib/mysql"       "$PREFIX/lib/mysql"     || true
-      [ -d "$SRC/usr/share/mysql" ]     && mv "$SRC/usr/share/mysql"     "$PREFIX/share/mysql"   || true
-      [ -d "$SRC/usr/share/mysql-8.0" ] && mv "$SRC/usr/share/mysql-8.0" "$PREFIX/share/mysql-8.0" || true
-    stage:
-      - opt/klyra-mysql
-      - usr/lib/x86_64-linux-gnu/libmysqlclient*
-      - usr/lib/x86_64-linux-gnu/libaio*
-      - usr/lib/x86_64-linux-gnu/libevent*
-      - usr/lib/x86_64-linux-gnu/libprotobuf-lite*
-      - usr/lib/x86_64-linux-gnu/libmecab*
-      - usr/lib/x86_64-linux-gnu/mecab/
-
-  # MariaDB 10.6 extracted to /opt/klyra-mariadb/ — isolated prefix, same reason.
-  # Only opt/klyra-mariadb/* and libmariadb* are staged to avoid duplicating
-  # system libs already contributed by the mysql-bundled part.
-  mariadb-bundled:
-    plugin: nil
-    stage-packages:
-      - mariadb-server
-      - libsnappy1v5
-    override-build: |
-      PREFIX="$SNAPCRAFT_PART_INSTALL/opt/klyra-mariadb"
-      SRC="$SNAPCRAFT_PART_INSTALL"
-      mkdir -p "$PREFIX/sbin" "$PREFIX/bin" "$PREFIX/lib" "$PREFIX/share"
-
-      for f in mariadbd mysqld; do
-        [ -f "$SRC/usr/sbin/$f" ] && mv "$SRC/usr/sbin/$f" "$PREFIX/sbin/"
-      done
-      for f in mariadbd-safe mysqld_safe mariadbd_safe \
-               mariadb mysql \
-               mariadb-admin mysqladmin \
-               mariadb-install-db mysql_install_db; do
-        [ -f "$SRC/usr/bin/$f" ] && mv "$SRC/usr/bin/$f" "$PREFIX/bin/"
-      done
-      [ -d "$SRC/usr/lib/mysql" ]          && mv "$SRC/usr/lib/mysql"          "$PREFIX/lib/mysql"          || true
-      [ -d "$SRC/usr/share/mysql" ]        && mv "$SRC/usr/share/mysql"        "$PREFIX/share/mysql"        || true
-      [ -d "$SRC/usr/share/mysql-common" ] && mv "$SRC/usr/share/mysql-common" "$PREFIX/share/mysql-common" || true
-    stage:
-      - opt/klyra-mariadb
-      - usr/lib/x86_64-linux-gnu/libmariadb*
-      - usr/lib/x86_64-linux-gnu/libsnappy*
