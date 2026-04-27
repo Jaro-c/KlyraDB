@@ -57,7 +57,7 @@ parts:
     override-build: |
       curl -fsSL https://go.dev/dl/go1.26.2.linux-amd64.tar.gz | tar -C /usr/local -xz
       export PATH="/usr/local/go/bin:$HOME/go/bin:$PATH"
-      GOFLAGS="-mod=mod" go install github.com/wailsapp/wails/v2/cmd/wails@v2.9.2
+      GOFLAGS="-mod=mod" go install github.com/wailsapp/wails/v2/cmd/wails@v2.12.0
       go clean -cache
       wails build -platform linux/amd64 -tags webkit2_41
       install -D build/bin/klyradb $CRAFT_PART_INSTALL/bin/klyradb
