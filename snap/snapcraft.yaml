@@ -1,4 +1,5 @@
 name: klyradb
+title: KlyraDB
 base: core22
 version: '0.5.0'
 summary: Local database manager — PostgreSQL, MySQL, MariaDB, Redis, MongoDB
@@ -11,6 +12,13 @@ description: |
     MySQL: 8.0
     MariaDB: 10.6
     Redis: 6.x
+
+license: Apache-2.0
+contact: https://github.com/Jaro-c/KlyraDB/issues
+website: https://github.com/Jaro-c/KlyraDB
+source-code: https://github.com/Jaro-c/KlyraDB
+issues: https://github.com/Jaro-c/KlyraDB/issues
+donation: https://github.com/sponsors/Jaro-c
 
 grade: stable
 confinement: strict
@@ -25,16 +33,6 @@ package-repositories:
     url: https://apt.postgresql.org/pub/repos/apt
     suites: [jammy-pgdg]
     components: [main]
-
-plugs:
-  network:
-  network-bind:
-  system-observe:
-  desktop:
-  desktop-legacy:
-  x11:
-  wayland:
-  opengl:
 
 apps:
   klyradb:
@@ -89,6 +87,31 @@ parts:
       - postgresql-client-common
       - redis-server
       - redis-tools
+    prime:
+      - -usr/lib/x86_64-linux-gnu/caca/
+      - -usr/lib/x86_64-linux-gnu/libcaca++*
+      - -usr/lib/x86_64-linux-gnu/libcolordprivate*
+      - -usr/lib/x86_64-linux-gnu/libdconf*
+      - -usr/lib/x86_64-linux-gnu/libEGL_mesa*
+      - -usr/lib/x86_64-linux-gnu/libexslt*
+      - -usr/lib/x86_64-linux-gnu/libGLESv2*
+      - -usr/lib/x86_64-linux-gnu/libGLX_mesa*
+      - -usr/lib/x86_64-linux-gnu/libgstcheck*
+      - -usr/lib/x86_64-linux-gnu/libgstcontroller*
+      - -usr/lib/x86_64-linux-gnu/libicuio*
+      - -usr/lib/x86_64-linux-gnu/libicutest*
+      - -usr/lib/x86_64-linux-gnu/libjacknet*
+      - -usr/lib/x86_64-linux-gnu/libjackserver*
+      - -usr/lib/x86_64-linux-gnu/liblua5.1-c++*
+      - -usr/lib/x86_64-linux-gnu/liblua5.2-bitop*
+      - -usr/lib/x86_64-linux-gnu/liblua5.2-cjson*
+      - -usr/lib/x86_64-linux-gnu/liborc-test*
+      - -usr/lib/x86_64-linux-gnu/libpulse-simple*
+      - -usr/lib/x86_64-linux-gnu/libsoup-2.4*
+      - -usr/lib/x86_64-linux-gnu/libunwind-coredump*
+      - -usr/lib/x86_64-linux-gnu/libunwind-ptrace*
+      - -usr/lib/x86_64-linux-gnu/libunwind-x86_64*
+      - -usr/lib/x86_64-linux-gnu/libwoff2enc*
 
   # MySQL 8.0 extracted to /opt/klyra-mysql/ to avoid file conflicts with MariaDB.
   # Both packages ship /usr/sbin/mysqld, /usr/lib/mysql/plugin/, /usr/share/mysql/ etc.
@@ -96,6 +119,11 @@ parts:
     plugin: nil
     stage-packages:
       - mysql-server-8.0
+      - libaio1
+      - libevent-core-2.1-7
+      - libevent-pthreads-2.1-7
+      - libprotobuf-lite23
+      - libmecab2
     override-build: |
       PREFIX="$SNAPCRAFT_PART_INSTALL/opt/klyra-mysql"
       SRC="$SNAPCRAFT_PART_INSTALL"
@@ -113,6 +141,11 @@ parts:
     stage:
       - opt/klyra-mysql
       - usr/lib/x86_64-linux-gnu/libmysqlclient*
+      - usr/lib/x86_64-linux-gnu/libaio*
+      - usr/lib/x86_64-linux-gnu/libevent*
+      - usr/lib/x86_64-linux-gnu/libprotobuf-lite*
+      - usr/lib/x86_64-linux-gnu/libmecab*
+      - usr/lib/x86_64-linux-gnu/mecab/
 
   # MariaDB 10.6 extracted to /opt/klyra-mariadb/ — isolated prefix, same reason.
   # Only opt/klyra-mariadb/* and libmariadb* are staged to avoid duplicating
@@ -121,6 +154,7 @@ parts:
     plugin: nil
     stage-packages:
       - mariadb-server
+      - libsnappy1v5
     override-build: |
       PREFIX="$SNAPCRAFT_PART_INSTALL/opt/klyra-mariadb"
       SRC="$SNAPCRAFT_PART_INSTALL"
@@ -141,3 +175,4 @@ parts:
     stage:
       - opt/klyra-mariadb
       - usr/lib/x86_64-linux-gnu/libmariadb*
+      - usr/lib/x86_64-linux-gnu/libsnappy*
