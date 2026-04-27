@@ -1,7 +1,7 @@
 name: klyradb
 title: KlyraDB
 base: core22
-version: '0.7.0'
+version: '0.7.1'
 summary: Local database manager — PostgreSQL, MySQL, MariaDB, Redis, MongoDB
 description: |
   KlyraDB manages isolated PostgreSQL, MySQL, MariaDB and Redis instances.
@@ -19,6 +19,10 @@ donation: https://github.com/sponsors/Jaro-c
 grade: stable
 confinement: strict
 compression: lzo
+
+layout:
+  /usr/lib/x86_64-linux-gnu/webkit2gtk-4.1:
+    bind: $SNAP/usr/lib/x86_64-linux-gnu/webkit2gtk-4.1
 
 architectures:
   - build-on: amd64
@@ -40,6 +44,8 @@ apps:
       DISPLAY: "${DISPLAY}"
       WAYLAND_DISPLAY: "${WAYLAND_DISPLAY}"
       XDG_RUNTIME_DIR: "${XDG_RUNTIME_DIR}"
+      GIO_EXTRA_MODULES: "${SNAP}/usr/lib/x86_64-linux-gnu/gio/modules"
+      WEBKIT_DISABLE_COMPOSITING_MODE: "1"
 
 parts:
   klyradb:
@@ -67,3 +73,6 @@ parts:
     stage-packages:
       - libwebkit2gtk-4.1-0
       - libgtk-3-0
+      - glib-networking
+      - libglib2.0-0
+      - shared-mime-info
